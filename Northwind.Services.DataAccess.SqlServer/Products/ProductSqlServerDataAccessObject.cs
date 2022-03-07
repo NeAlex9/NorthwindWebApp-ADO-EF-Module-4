@@ -4,6 +4,10 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
+#pragma warning disable CA2100 // Review SQL queries for security vulnerabilities
 
 namespace Northwind.DataAccess.Products
 {
@@ -24,81 +28,85 @@ namespace Northwind.DataAccess.Products
         }
 
         /// <inheritdoc/>
-        public int InsertProduct(ProductTransferObject product)
+        public async Task<int> InsertProduct(ProductTransferObject product)
         {
             if (product == null)
             {
                 throw new ArgumentNullException(nameof(product));
             }
 
-            const string commandText =
-@"INSERT INTO dbo.Products (ProductName, SupplierID, CategoryID, QuantityPerUnit, UnitPrice, UnitsInStock, UnitsOnOrder, ReorderLevel, Discontinued) OUTPUT Inserted.ProductID
-VALUES (@productName, @supplierId, @categoryId, @quantityPerUnit, @unitPrice, @unitsInStock, @unitsOnOrder, @reorderLevel, @discontinued)";
-
-            using (var command = new SqlCommand(commandText, this.connection))
+            await using var command = new SqlCommand("InsertProduct", this.connection)
             {
-                AddSqlParameters(product, command);
-
-                var id = command.ExecuteScalar();
-                return (int)id;
-            }
+                CommandType = CommandType.StoredProcedure,
+            };
+            AddSqlParameters(product, command);
+            await this.connection.OpenAsync();
+            var result = await command.ExecuteNonQueryAsync();
+            return result;
         }
 
         /// <inheritdoc/>
-        public bool DeleteProduct(int productId)
+        public async Task<bool> DeleteProduct(int productId)
         {
             if (productId <= 0)
             {
                 throw new ArgumentException("Must be greater than zero.", nameof(productId));
             }
 
+            await using var command = new SqlCommand("DeleteProduct", this.connection)
+            {
+                CommandType = CommandType.StoredProcedure,
+            };
+
+            const string productNameParameter = "@id";
+            command.Parameters.Add(productNameParameter, SqlDbType.Int);
+            command.Parameters[productNameParameter].Value = productId;
+
+            await this.connection.OpenAsync();
+            var row = await command.ExecuteNonQueryAsync();
+            return row > 0;
+
+
             const string commandText =
-@"DELETE FROM dbo.Products WHERE ProductID = @productID
+                @"DELETE FROM dbo.Products WHERE ProductID = @productID
 SELECT @@ROWCOUNT";
-
-            using (var command = new SqlCommand(commandText, this.connection))
-            {
-                const string productIdParameter = "@productID";
-                command.Parameters.Add(productIdParameter, SqlDbType.Int);
-                command.Parameters[productIdParameter].Value = productId;
-
-                var result = command.ExecuteScalar();
-                return ((int)result) > 0;
-            }
         }
 
         /// <inheritdoc/>
-        public ProductTransferObject FindProduct(int productId)
+        public async Task<ProductTransferObject> FindProduct(int productId)
         {
             if (productId <= 0)
             {
                 throw new ArgumentException("Must be greater than zero.", nameof(productId));
             }
 
-            const string commandText =
-@"SELECT p.ProductID, p.ProductName, p.SupplierID, p.CategoryID, p.QuantityPerUnit, p.UnitPrice, p.UnitsInStock, p.UnitsOnOrder, p.ReorderLevel, p.Discontinued FROM dbo.Products as p
-WHERE p.ProductID = @productId";
-
-            using (var command = new SqlCommand(commandText, this.connection))
+            await using var command = new SqlCommand("FindProductById", this.connection)
             {
-                const string productIdParameter = "@productId";
-                command.Parameters.Add(productIdParameter, SqlDbType.Int);
-                command.Parameters[productIdParameter].Value = productId;
+                CommandType = CommandType.StoredProcedure,
+            };
 
-                using (var reader = command.ExecuteReader())
-                {
-                    if (!reader.Read())
-                    {
-                        throw new ProductNotFoundException(productId);
-                    }
+            const string productIdParameter = "@productId";
+            command.Parameters.Add(productIdParameter, SqlDbType.Int);
+            command.Parameters[productIdParameter].Value = productId;
 
-                    return CreateProduct(reader);
-                }
+            await this.connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            if (!(await reader.ReadAsync()))
+            {
+                throw new ProductNotFoundException(productId);
             }
+
+            return CreateProduct(reader);
+
+
+            const string commandText =
+                @"SELECT p.ProductID, p.ProductName, p.SupplierID, p.CategoryID, p.QuantityPerUnit, p.UnitPrice, p.UnitsInStock, p.UnitsOnOrder, p.ReorderLevel, p.Discontinued FROM dbo.Products as p
+WHERE p.ProductID = @productId";
         }
 
         /// <inheritdoc />
-        public IList<ProductTransferObject> SelectProducts(int offset, int limit)
+        public async IAsyncEnumerable<ProductTransferObject> SelectProducts(int offset, int limit)
         {
             if (offset < 0)
             {
@@ -110,19 +118,39 @@ WHERE p.ProductID = @productId";
                 throw new ArgumentException("Must be greater than zero.", nameof(limit));
             }
 
+            await using var command = new SqlCommand("SelectProducts", this.connection)
+            {
+                CommandType = CommandType.StoredProcedure,
+            };
+
+            const string offsetVar = "@offset";
+            command.Parameters.Add(offsetVar, SqlDbType.Int);
+            command.Parameters[offsetVar].Value = offset;
+
+            const string limitVar = "@limit";
+            command.Parameters.Add(limitVar, SqlDbType.Int);
+            command.Parameters[limitVar].Value = limit;
+
+            await this.connection.OpenAsync();
+
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                yield return CreateProduct(reader);
+            }
+
+
             const string commandTemplate =
-@"SELECT p.ProductID, p.ProductName, p.SupplierID, p.CategoryID, p.QuantityPerUnit, p.UnitPrice, p.UnitsInStock, p.UnitsOnOrder, p.ReorderLevel, p.Discontinued FROM dbo.Products as p
+                @"SELECT p.ProductID, p.ProductName, p.SupplierID, p.CategoryID, p.QuantityPerUnit, p.UnitPrice, p.UnitsInStock, p.UnitsOnOrder, p.ReorderLevel, p.Discontinued FROM dbo.Products as p
 ORDER BY p.ProductID
 OFFSET {0} ROWS
 FETCH FIRST {1} ROWS ONLY";
-
-            string commandText = string.Format(CultureInfo.CurrentCulture, commandTemplate, offset, limit);
-            return this.ExecuteReader(commandText);
         }
 
         /// <inheritdoc/>
-        public IList<ProductTransferObject> SelectProductsByName(ICollection<string> productNames)
+        public async IAsyncEnumerable<ProductTransferObject> SelectProductsByName(ICollection<string> productNames)
         {
+            throw new NotImplementedException();
             if (productNames == null)
             {
                 throw new ArgumentNullException(nameof(productNames));
@@ -133,73 +161,88 @@ FETCH FIRST {1} ROWS ONLY";
                 throw new ArgumentException("Collection is empty.", nameof(productNames));
             }
 
+            await using var command = new SqlCommand("SelectProductsByName", this.connection)
+            {
+                CommandType = CommandType.StoredProcedure,
+            };
+
+            const string namesVar = "@names";
+            command.Parameters.Add(namesVar, SqlDbType.Int);
+            command.Parameters[namesVar].Value = productNames;
+
+            await this.connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                yield return CreateProduct(reader);
+            }
+
             const string commandTemplate =
-@"SELECT p.ProductID, p.ProductName, p.SupplierID, p.CategoryID, p.QuantityPerUnit, p.UnitPrice, p.UnitsInStock, p.UnitsOnOrder, p.ReorderLevel, p.Discontinued FROM dbo.Products as p
+                @"SELECT p.ProductID, p.ProductName, p.SupplierID, p.CategoryID, p.QuantityPerUnit, p.UnitPrice, p.UnitsInStock, p.UnitsOnOrder, p.ReorderLevel, p.Discontinued FROM dbo.Products as p
 WHERE p.ProductName in ('{0}')
 ORDER BY p.ProductID";
-
-            string commandText = string.Format(CultureInfo.CurrentCulture, commandTemplate, string.Join("', '", productNames));
-            return this.ExecuteReader(commandText);
         }
 
         /// <inheritdoc/>
-        public bool UpdateProduct(ProductTransferObject product)
+        public async Task<bool> UpdateProduct(ProductTransferObject product)
         {
             if (product == null)
             {
                 throw new ArgumentNullException(nameof(product));
             }
 
+            await using var command = new SqlCommand("UpdateProduct", this.connection)
+            {
+                CommandType = CommandType.StoredProcedure,
+            };
+
+            AddSqlParameters(product, command);
+
+            await this.connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            var result = await command.ExecuteNonQueryAsync();
+            return result > 0;
+
+
             const string commandText =
-@"UPDATE dbo.Products
+                @"UPDATE dbo.Products
 SET ProductName = @productName, SupplierID = @supplierId, CategoryID = @categoryId, QuantityPerUnit = @quantityPerUnit, UnitPrice = @unitPrice, UnitsInStock = @unitsInStock, UnitsOnOrder = @unitsOnOrder, ReorderLevel = @reorderLevel, Discontinued = @discontinued
 WHERE ProductID = @productId
 SELECT @@ROWCOUNT";
-
-            using (var command = new SqlCommand(commandText, this.connection))
-            {
-                AddSqlParameters(product, command);
-
-                const string productId = "@productId";
-                command.Parameters.Add(productId, SqlDbType.Int);
-                command.Parameters[productId].Value = product.Id;
-
-                var result = command.ExecuteScalar();
-                return ((int)result) > 0;
-            }
         }
 
         /// <inheritdoc/>
-        public IList<ProductTransferObject> SelectProductByCategory(ICollection<int> collectionOfCategoryId)
+        public async IAsyncEnumerable<ProductTransferObject> SelectProductByCategory(ICollection<int> collectionOfCategoryId)
         {
+            throw new NotImplementedException();
             if (collectionOfCategoryId == null)
             {
                 throw new ArgumentNullException(nameof(collectionOfCategoryId));
             }
 
-            var whereInClause = string.Join("','", collectionOfCategoryId.Select(id => string.Format(CultureInfo.InvariantCulture, "{0:d}", id)).ToArray());
-
-            const string commandTemplate =
-@"SELECT p.ProductID, p.ProductName, p.SupplierID, p.CategoryID, p.QuantityPerUnit, p.UnitPrice, p.UnitsInStock, p.UnitsOnOrder, p.ReorderLevel, p.Discontinued
-FROM dbo.Products as p
-WHERE p.CategoryID in ('{0}')";
-
-            string commandText = string.Format(CultureInfo.InvariantCulture, commandTemplate, whereInClause);
-
-            var products = new List<ProductTransferObject>();
-
-#pragma warning disable CA2100 // Review SQL queries for security vulnerabilities
-            using (var command = new SqlCommand(commandText, this.connection))
-#pragma warning restore CA2100 // Review SQL queries for security vulnerabilities
-            using (var reader = command.ExecuteReader())
+            await using var command = new SqlCommand("SelectProductsByCategory", this.connection)
             {
-                while (reader.Read())
-                {
-                    products.Add(CreateProduct(reader));
-                }
+                CommandType = CommandType.StoredProcedure,
+            }; 
+
+            const string namesVar = "@names";
+            command.Parameters.Add(namesVar, SqlDbType.Int);
+            command.Parameters[namesVar].Value = collectionOfCategoryId;
+
+            await this.connection.OpenAsync();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                yield return CreateProduct(reader);
             }
 
-            return products;
+            const string commandTemplate =
+                @"SELECT p.ProductID, p.ProductName, p.SupplierID, p.CategoryID, p.QuantityPerUnit, p.UnitPrice, p.UnitsInStock, p.UnitsOnOrder, p.ReorderLevel, p.Discontinued
+FROM dbo.Products as p
+WHERE p.CategoryID in ('{0}')";
         }
 
         private static ProductTransferObject CreateProduct(SqlDataReader reader)
@@ -411,22 +454,14 @@ WHERE p.CategoryID in ('{0}')";
             command.Parameters[discontinuedParameter].Value = product.Discontinued;
         }
 
-        private IList<ProductTransferObject> ExecuteReader(string commandText)
+        private async IAsyncEnumerable<ProductTransferObject> ExecuteReader(string commandText)
         {
-            var products = new List<ProductTransferObject>();
-
-#pragma warning disable CA2100 // Review SQL queries for security vulnerabilities
-            using (var command = new SqlCommand(commandText, this.connection))
-#pragma warning restore CA2100 // Review SQL queries for security vulnerabilities
-            using (var reader = command.ExecuteReader())
+            await using var command = new SqlCommand(commandText, this.connection);
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
             {
-                while (reader.Read())
-                {
-                    products.Add(CreateProduct(reader));
-                }
+                yield return CreateProduct(reader);
             }
-
-            return products;
         }
     }
 }

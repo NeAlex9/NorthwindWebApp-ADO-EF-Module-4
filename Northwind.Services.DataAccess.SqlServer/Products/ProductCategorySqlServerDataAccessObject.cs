@@ -4,6 +4,8 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Globalization;
 
+#pragma warning disable CA2100 // Review SQL queries for security vulnerabilities
+
 namespace Northwind.DataAccess.Products
 {
     /// <summary>
@@ -233,10 +235,7 @@ SELECT @@ROWCOUNT";
         private IList<ProductCategoryTransferObject> ExecuteReader(string commandText)
         {
             var productCategories = new List<ProductCategoryTransferObject>();
-
-#pragma warning disable CA2100 // Review SQL queries for security vulnerabilities
             using (var command = new SqlCommand(commandText, this.connection))
-#pragma warning restore CA2100 // Review SQL queries for security vulnerabilities
             using (var reader = command.ExecuteReader())
             {
                 while (reader.Read())
