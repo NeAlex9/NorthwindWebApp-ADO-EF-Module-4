@@ -22,21 +22,15 @@ namespace Northwind.DataAccess
         }
 
         /// <inheritdoc/>
-        public override IProductCategoryDataAccessObject GetProductCategoryDataAccessObject()
-        {
-            return new ProductCategorySqlServerDataAccessObject(this.sqlConnection);
-        }
+        public override IProductCategoryDataAccessObject GetProductCategoryDataAccessObject() =>
+            new ProductCategorySqlServerDataAccessObject(this.sqlConnection);
 
         /// <inheritdoc/>
-        public override IProductDataAccessObject GetProductDataAccessObject()
-        {
-            return new ProductSqlServerDataAccessObject(this.sqlConnection);
-        }
+        public override IProductDataAccessObject GetProductDataAccessObject() =>
+            new ProductSqlServerDataAccessObject(this.sqlConnection);
 
         /// <inheritdoc />
-        public override IEmployeeDataAccessObject GetEmployeeDataAccessObject()
-        {
-            return new EmployeeSqlServerDataAccessObject();
-        }
+        public override IEmployeeDataAccessObject GetEmployeeDataAccessObject() =>
+            new EmployeeSqlServerDataAccessObject();
     }
 }

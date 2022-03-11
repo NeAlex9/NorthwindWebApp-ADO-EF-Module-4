@@ -41,7 +41,7 @@ namespace Northwind.DataAccess.Products
             };
             AddSqlParameters(product, command);
             await this.connection.OpenAsync();
-            var result = await command.ExecuteNonQueryAsync();
+            var result = (int) await command.ExecuteScalarAsync();
             return result;
         }
 
@@ -58,18 +58,13 @@ namespace Northwind.DataAccess.Products
                 CommandType = CommandType.StoredProcedure,
             };
 
-            const string productNameParameter = "@id";
+            const string productNameParameter = "@productId";
             command.Parameters.Add(productNameParameter, SqlDbType.Int);
             command.Parameters[productNameParameter].Value = productId;
 
             await this.connection.OpenAsync();
             var row = await command.ExecuteNonQueryAsync();
             return row > 0;
-
-
-            const string commandText =
-                @"DELETE FROM dbo.Products WHERE ProductID = @productID
-SELECT @@ROWCOUNT";
         }
 
         /// <inheritdoc/>
@@ -98,11 +93,6 @@ SELECT @@ROWCOUNT";
             }
 
             return CreateProduct(reader);
-
-
-            const string commandText =
-                @"SELECT p.ProductID, p.ProductName, p.SupplierID, p.CategoryID, p.QuantityPerUnit, p.UnitPrice, p.UnitsInStock, p.UnitsOnOrder, p.ReorderLevel, p.Discontinued FROM dbo.Products as p
-WHERE p.ProductID = @productId";
         }
 
         /// <inheritdoc />
@@ -138,19 +128,11 @@ WHERE p.ProductID = @productId";
             {
                 yield return CreateProduct(reader);
             }
-
-
-            const string commandTemplate =
-                @"SELECT p.ProductID, p.ProductName, p.SupplierID, p.CategoryID, p.QuantityPerUnit, p.UnitPrice, p.UnitsInStock, p.UnitsOnOrder, p.ReorderLevel, p.Discontinued FROM dbo.Products as p
-ORDER BY p.ProductID
-OFFSET {0} ROWS
-FETCH FIRST {1} ROWS ONLY";
         }
 
         /// <inheritdoc/>
         public async IAsyncEnumerable<ProductTransferObject> SelectProductsByName(ICollection<string> productNames)
         {
-            throw new NotImplementedException();
             if (productNames == null)
             {
                 throw new ArgumentNullException(nameof(productNames));
@@ -167,7 +149,8 @@ FETCH FIRST {1} ROWS ONLY";
             };
 
             const string namesVar = "@names";
-            command.Parameters.Add(namesVar, SqlDbType.Int);
+            command.Parameters.Add(namesVar, SqlDbType.Structured);
+            command.Parameters[namesVar].TypeName = "StringCollection";
             command.Parameters[namesVar].Value = productNames;
 
             await this.connection.OpenAsync();
@@ -177,11 +160,6 @@ FETCH FIRST {1} ROWS ONLY";
             {
                 yield return CreateProduct(reader);
             }
-
-            const string commandTemplate =
-                @"SELECT p.ProductID, p.ProductName, p.SupplierID, p.CategoryID, p.QuantityPerUnit, p.UnitPrice, p.UnitsInStock, p.UnitsOnOrder, p.ReorderLevel, p.Discontinued FROM dbo.Products as p
-WHERE p.ProductName in ('{0}')
-ORDER BY p.ProductID";
         }
 
         /// <inheritdoc/>
@@ -197,26 +175,21 @@ ORDER BY p.ProductID";
                 CommandType = CommandType.StoredProcedure,
             };
 
+            const string productNameParameter = "@productId";
+            command.Parameters.Add(productNameParameter, SqlDbType.Int);
+            command.Parameters[productNameParameter].Value = product.Id;
+
             AddSqlParameters(product, command);
 
             await this.connection.OpenAsync();
-            await using var reader = await command.ExecuteReaderAsync();
 
             var result = await command.ExecuteNonQueryAsync();
             return result > 0;
-
-
-            const string commandText =
-                @"UPDATE dbo.Products
-SET ProductName = @productName, SupplierID = @supplierId, CategoryID = @categoryId, QuantityPerUnit = @quantityPerUnit, UnitPrice = @unitPrice, UnitsInStock = @unitsInStock, UnitsOnOrder = @unitsOnOrder, ReorderLevel = @reorderLevel, Discontinued = @discontinued
-WHERE ProductID = @productId
-SELECT @@ROWCOUNT";
         }
 
         /// <inheritdoc/>
         public async IAsyncEnumerable<ProductTransferObject> SelectProductByCategory(ICollection<int> collectionOfCategoryId)
         {
-            throw new NotImplementedException();
             if (collectionOfCategoryId == null)
             {
                 throw new ArgumentNullException(nameof(collectionOfCategoryId));
@@ -225,10 +198,11 @@ SELECT @@ROWCOUNT";
             await using var command = new SqlCommand("SelectProductsByCategory", this.connection)
             {
                 CommandType = CommandType.StoredProcedure,
-            }; 
+            };
 
-            const string namesVar = "@names";
-            command.Parameters.Add(namesVar, SqlDbType.Int);
+            const string namesVar = "@categories";
+            command.Parameters.Add(namesVar, SqlDbType.Structured);
+            command.Parameters[namesVar].TypeName = "IntCollection";
             command.Parameters[namesVar].Value = collectionOfCategoryId;
 
             await this.connection.OpenAsync();
@@ -238,11 +212,6 @@ SELECT @@ROWCOUNT";
             {
                 yield return CreateProduct(reader);
             }
-
-            const string commandTemplate =
-                @"SELECT p.ProductID, p.ProductName, p.SupplierID, p.CategoryID, p.QuantityPerUnit, p.UnitPrice, p.UnitsInStock, p.UnitsOnOrder, p.ReorderLevel, p.Discontinued
-FROM dbo.Products as p
-WHERE p.CategoryID in ('{0}')";
         }
 
         private static ProductTransferObject CreateProduct(SqlDataReader reader)

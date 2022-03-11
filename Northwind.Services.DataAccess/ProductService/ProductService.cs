@@ -52,41 +52,48 @@ namespace Northwind.Services.DataAccess.ProductService
             }
             catch (ProductNotFoundException)
             {
-                throw;
+                return (false, null);
             }
         }
 
+        /// <inheritdoc />
+        public async Task<int> CreateProductAsync(Product product) =>
+            await this.factory.GetProductDataAccessObject().InsertProduct(this.productToProductDTOMapper.Map<ProductTransferObject>(product));
 
         /// <inheritdoc />
-        public async Task<int> CreateProductAsync(Product product)
-        {
-            throw new NotImplementedException();
-        }
+        public async Task<bool> DeleteProductAsync(int productId) =>
+            await this.factory.GetProductDataAccessObject().DeleteProduct(productId);
 
         /// <inheritdoc />
-        public async Task<bool> DeleteProductAsync(int productId)
+        public async IAsyncEnumerable<Product> GetProductsByNameAsync(ICollection<string> names)
         {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc />
-        public async IAsyncEnumerable<Product> GetProductsByNameAsync(IAsyncEnumerable<string> names)
-        {
-            throw new NotImplementedException();
-            yield return null;
+            await foreach (var product in this.factory
+                              .GetProductDataAccessObject()
+                              .SelectProductsByName(names))
+            {
+                yield return this.productToProductDTOMapper.Map<Product>(product);
+            }
         }
 
         /// <inheritdoc />
         public async Task<bool> UpdateProductAsync(int productId, Product product)
         {
-            throw new NotImplementedException();
+            product.Id = productId;
+            var result = await this.factory
+                .GetProductDataAccessObject()
+                .UpdateProduct(this.productToProductDTOMapper.Map<ProductTransferObject>(product));
+            return result;
         }
 
         /// <inheritdoc />
-        public async IAsyncEnumerable<Product> GetProductsByCategoryAsync(int categoryId)
+        public async IAsyncEnumerable<Product> GetProductsByCategoryAsync(ICollection<int> categoriesId)
         {
-            throw new NotImplementedException();
-            yield return null;
+            await foreach (var product in this.factory
+                               .GetProductDataAccessObject()
+                               .SelectProductByCategory(categoriesId))
+            {
+                yield return this.productToProductDTOMapper.Map<Product>(product);
+            }
         }
     }
 }

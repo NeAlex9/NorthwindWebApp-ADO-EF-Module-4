@@ -18,17 +18,17 @@ namespace NorthwindApiApp.Controllers
             this.productCategoryService = productCategoryService ?? throw new ArgumentNullException(nameof(productCategoryService));
         }
 
-        [HttpGet("{id}")]
+        //[HttpGet("{id}")]
 
-        public async Task<ActionResult<ProductCategory>> GetProductById(int id)
-        {
-            (bool isSuccess, ProductCategory category) = await this.productCategoryService.TryGetCategoryAsync(id);
-            if (isSuccess)
-            {
-                return new ObjectResult(category);
-            }
+        //public async Task<ActionResult<ProductCategory>> GetProductById(int id)
+        //{
+        //    (bool isSuccess, ProductCategory category) = await this.productCategoryService.TryGetCategoryAsync(id);
+        //    if (isSuccess)
+        //    {
+        //        return new ObjectResult(category);
+        //    }
 
-            return new NotFoundResult();
-        }
+        //    return new NotFoundResult();
+        //}
     }
 }

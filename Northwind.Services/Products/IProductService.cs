@@ -44,7 +44,7 @@ namespace Northwind.Services.Products
         /// </summary>
         /// <param name="names">A list of product names.</param>
         /// <returns>A list of products with specified names.</returns>
-        IAsyncEnumerable<Product> GetProductsByNameAsync(IAsyncEnumerable<string> names);
+        IAsyncEnumerable<Product> GetProductsByNameAsync(ICollection<string> names);
 
         /// <summary>
         /// Updates a product.
@@ -59,6 +59,6 @@ namespace Northwind.Services.Products
         /// </summary>
         /// <param name="categoryId">A product category identifier.</param>
         /// <returns>A <see cref="IList{T}"/> of <see cref="Product"/>.</returns>
-        IAsyncEnumerable<Product> GetProductsByCategoryAsync(int categoryId);
+        IAsyncEnumerable<Product> GetProductsByCategoryAsync(ICollection<int> categoriesId);
     }
 }

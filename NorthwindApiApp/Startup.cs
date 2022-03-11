@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using AutoMapper;
 using Northwind.DataAccess;
@@ -35,16 +36,15 @@ namespace NorthwindApiApp
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddControllers()
+                .AddJsonOptions(option => option.JsonSerializerOptions.WriteIndented = true);
+            services.AddSwaggerGen();
             services.AddTransient<IProductService, ProductService>()
                 .AddTransient<IProductCategoryService, ProductCategoryService>()
                 .AddTransient<IProductCategoryPictureService, ProductCategoryPictureService>()
                 .AddTransient<IEmployeeService, EmployeeService>()
                 .AddTransient<IMapper, Mapper>(provider => new Mapper(new MapperConfiguration(config => config.AddProfile(new MapperProfile()))))
-                .AddSingleton<NorthwindDataAccessFactory, SqlServerDataAccessFactory>()
-                .AddTransient<IProductDataAccessObject, ProductSqlServerDataAccessObject>()
-                .AddTransient<IEmployeeDataAccessObject, EmployeeSqlServerDataAccessObject>()
-                .AddTransient<IProductCategoryDataAccessObject, ProductCategorySqlServerDataAccessObject>()
+                .AddTransient<NorthwindDataAccessFactory, SqlServerDataAccessFactory>()
                 .AddTransient(e => new SqlConnection(this.Configuration.GetConnectionString("SqlConnection")));
         }
 
@@ -53,6 +53,11 @@ namespace NorthwindApiApp
         {
             if (env.IsDevelopment())
             {
+                app.UseSwagger();
+                app.UseSwaggerUI((app) =>
+                {
+                    app.SwaggerEndpoint("/swagger/v1/swagger.json", "My");
+                });
                 app.UseDeveloperExceptionPage();
             }
 
