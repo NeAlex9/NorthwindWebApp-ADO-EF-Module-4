@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
 using Northwind.DataAccess;
+using Northwind.DataAccess.Products;
 using Northwind.Services.Products;
 
 namespace Northwind.Services.DataAccess.ProductService
@@ -14,7 +15,7 @@ namespace Northwind.Services.DataAccess.ProductService
     public class ProductCategoryService : IProductCategoryService
     {
         private readonly NorthwindDataAccessFactory factory;
-        private readonly IMapper categoryToCategoryDTO;
+        private readonly IMapper mapper;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ProductCategoryService"/> class.
@@ -24,43 +25,67 @@ namespace Northwind.Services.DataAccess.ProductService
         public ProductCategoryService(NorthwindDataAccessFactory factory, IMapper mapper)
         {
             this.factory = factory;
-            this.categoryToCategoryDTO = mapper;
+            this.mapper = mapper;
         }
 
         /// <inheritdoc />
-        public IAsyncEnumerable<ProductCategory> GetCategoriesAsync(int offset, int limit)
+        public async IAsyncEnumerable<ProductCategory> GetCategoriesAsync(int offset, int limit)
         {
-            throw new NotImplementedException();
+            await foreach (var category in this.factory
+                               .GetProductCategoryDataAccessObject()
+                               .SelectProductCategories(offset, limit))
+            {
+                yield return this.mapper.Map<ProductCategory>(category);
+            }
         }
 
         /// <inheritdoc />
-        public Task<(bool isSuccess, ProductCategory productCategory)> TryGetCategoryAsync(int categoryId)
+        public async Task<(bool isSuccess, ProductCategory productCategory)> TryGetCategoryAsync(int categoryId)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var dto = await this.factory
+                    .GetProductCategoryDataAccessObject()
+                    .FindProductCategory(categoryId);
+                var product = this.mapper.Map<ProductCategory>(dto);
+                return (true, product);
+            }
+            catch (ProductNotFoundException)
+            {
+                return (false, null);
+            }
         }
 
         /// <inheritdoc />
-        public Task<int> CreateCategoryAsync(ProductCategory productCategory)
+        public async Task<int> CreateCategoryAsync(ProductCategory productCategory) =>
+            await this.factory
+                .GetProductCategoryDataAccessObject()
+                .InsertProductCategory(this.mapper.Map<ProductCategoryTransferObject>(productCategory));
+
+        /// <inheritdoc />
+        public async Task<bool> DeleteCategoryAsync(int categoryId) =>
+            await this.factory
+                .GetProductCategoryDataAccessObject()
+                .DeleteProductCategory(categoryId);
+
+        /// <inheritdoc />
+        public async IAsyncEnumerable<ProductCategory> GetCategoriesByNameAsync(ICollection<string> names)
         {
-            throw new NotImplementedException();
+            await foreach (var dto in this.factory
+                               .GetProductCategoryDataAccessObject()
+                               .SelectProductCategoriesByName(names))
+            {
+                yield return this.mapper.Map<ProductCategory>(dto);
+            }
         }
 
         /// <inheritdoc />
-        public Task<bool> DeleteCategoryAsync(int categoryId)
+        public async Task<bool> UpdateCategoriesAsync(int categoryId, ProductCategory productCategory)
         {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc />
-        public IAsyncEnumerable<ProductCategory> GetCategoriesByNameAsync(IList<string> names)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc />
-        public Task<bool> UpdateCategoriesAsync(int categoryId, ProductCategory productCategory)
-        {
-            throw new NotImplementedException();
+            productCategory.Id = categoryId;
+            return await this.factory
+                .GetProductCategoryDataAccessObject()
+                .UpdateProductCategory(this.mapper.Map<ProductCategoryTransferObject>(productCategory));
         }
     }
 }

@@ -27,7 +27,7 @@ namespace NorthwindApiApp.Controllers
                 return new ObjectResult(product);
             }
 
-            return this.Ok();
+            return this.NotFound();
         }
 
         [Microsoft.AspNetCore.Mvc.HttpGet()]
@@ -45,7 +45,10 @@ namespace NorthwindApiApp.Controllers
         {
             var productId = await this.productService.CreateProductAsync(product);
             product.Id = productId;
-            return this.CreatedAtAction(nameof(this.GetProductById), new { id = product.Id }, product);
+            return this.CreatedAtAction(nameof(this.GetProductById), new
+            {
+                id = product.Id
+            }, product);
         }
 
         [Microsoft.AspNetCore.Mvc.HttpDelete("{id}")]
@@ -61,7 +64,7 @@ namespace NorthwindApiApp.Controllers
         }
 
         [Microsoft.AspNetCore.Mvc.HttpGet("ByNames/{names}")]
-        public async IAsyncEnumerable<Product> GetProductsByName([FromUri]ICollection<string> names)
+        public async IAsyncEnumerable<Product> GetProductsByName([FromUri] ICollection<string> names)
         {
             await foreach (var product in this.productService
                                .GetProductsByNameAsync(names))
@@ -71,7 +74,7 @@ namespace NorthwindApiApp.Controllers
         }
 
         [Microsoft.AspNetCore.Mvc.HttpGet("ByCategory/{categoryId}")]
-        public async IAsyncEnumerable<Product> GetProductsByCategory([FromUri]ICollection<int> categories)
+        public async IAsyncEnumerable<Product> GetProductsByCategory([FromUri] ICollection<int> categories)
         {
             await foreach (var product in this.productService
                                .GetProductsByCategoryAsync(categories))

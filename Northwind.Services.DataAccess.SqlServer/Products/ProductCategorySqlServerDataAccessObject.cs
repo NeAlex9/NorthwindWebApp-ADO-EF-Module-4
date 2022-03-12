@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Globalization;
+using System.Threading.Tasks;
 
 #pragma warning disable CA2100 // Review SQL queries for security vulnerabilities
 
@@ -25,81 +26,78 @@ namespace Northwind.DataAccess.Products
         }
 
         /// <inheritdoc/>
-        public int InsertProductCategory(ProductCategoryTransferObject productCategory)
+        public async Task<int> InsertProductCategory(ProductCategoryTransferObject productCategory)
         {
             if (productCategory == null)
             {
                 throw new ArgumentNullException(nameof(productCategory));
             }
 
-            const string commandText =
-@"INSERT INTO dbo.Categories (CategoryName, Description, Picture) OUTPUT Inserted.CategoryID
-VALUES (@categoryName, @description, @picture)";
-
-            using (var command = new SqlCommand(commandText, this.connection))
+            await using var command = new SqlCommand("InsertCategory", this.connection)
             {
-                AddSqlParameters(productCategory, command);
+                CommandType = CommandType.StoredProcedure,
+            };
 
-                var id = command.ExecuteScalar();
-                return (int)id;
-            }
+            AddSqlParameters(productCategory, command);
+
+            await this.connection.OpenAsync();
+
+            var categoryId = (int)await command.ExecuteScalarAsync();
+            return categoryId;
         }
 
         /// <inheritdoc/>
-        public bool DeleteProductCategory(int productCategoryId)
+        public async Task<bool> DeleteProductCategory(int productCategoryId)
         {
             if (productCategoryId <= 0)
             {
                 throw new ArgumentException("Must be greater than zero.", nameof(productCategoryId));
             }
 
-            const string commandText =
-@"DELETE FROM dbo.Categories WHERE CategoryID = @categoryID
-SELECT @@ROWCOUNT";
-
-            using (var command = new SqlCommand(commandText, this.connection))
+            await using var command = new SqlCommand("DeleteCategory", this.connection)
             {
-                const string categoryId = "@categoryID";
-                command.Parameters.Add(categoryId, SqlDbType.Int);
-                command.Parameters[categoryId].Value = productCategoryId;
+                CommandType = CommandType.StoredProcedure,
+            };
 
-                var result = command.ExecuteScalar();
-                return ((int)result) > 0;
-            }
+            const string varName = "categoryId";
+            command.Parameters.Add(varName, SqlDbType.Int);
+            command.Parameters[varName].Value = productCategoryId;
+
+            await this.connection.OpenAsync();
+
+            var deletedRowsCount = await command.ExecuteNonQueryAsync();
+            return deletedRowsCount > 0;
         }
 
         /// <inheritdoc/>
-        public ProductCategoryTransferObject FindProductCategory(int productCategoryId)
+        public async Task<ProductCategoryTransferObject> FindProductCategory(int productCategoryId)
         {
             if (productCategoryId <= 0)
             {
                 throw new ArgumentException("Must be greater than zero.", nameof(productCategoryId));
             }
 
-            const string commandText =
-@"SELECT c.CategoryID, c.CategoryName, c.Description, c.Picture FROM dbo.Categories as c
-WHERE c.CategoryID = @categoryId";
-
-            using (var command = new SqlCommand(commandText, this.connection))
+            await using var command = new SqlCommand("FindCategoryById", this.connection)
             {
-                const string categoryId = "@categoryId";
-                command.Parameters.Add(categoryId, SqlDbType.Int);
-                command.Parameters[categoryId].Value = productCategoryId;
+                CommandType = CommandType.StoredProcedure,
+            };
 
-                using (var reader = command.ExecuteReader())
-                {
-                    if (!reader.Read())
-                    {
-                        throw new ProductCategoryNotFoundException(productCategoryId);
-                    }
+            const string varName = "categoryId";
+            command.Parameters.Add(varName, SqlDbType.Int);
+            command.Parameters[varName].Value = productCategoryId;
 
-                    return CreateProductCategory(reader);
-                }
+            await this.connection.OpenAsync();
+            var reader = await command.ExecuteReaderAsync();
+            if (!(await reader.ReadAsync()))
+            {
+                throw new ProductNotFoundException(productCategoryId);
             }
+
+            return CreateProductCategory(reader);
         }
 
         /// <inheritdoc/>
-        public IList<ProductCategoryTransferObject> SelectProductCategories(int offset, int limit)
+        public async IAsyncEnumerable<ProductCategoryTransferObject> SelectProductCategories(int offset, int limit)
         {
             if (offset < 0)
             {
@@ -111,18 +109,30 @@ WHERE c.CategoryID = @categoryId";
                 throw new ArgumentException("Must be greater than zero.", nameof(limit));
             }
 
-            const string commandTemplate =
-@"SELECT c.CategoryID, c.CategoryName, c.Description, c.Picture FROM dbo.Categories as c
-ORDER BY c.CategoryID
-OFFSET {0} ROWS
-FETCH FIRST {1} ROWS ONLY";
+            await using var command = new SqlCommand("SelectCategories", this.connection)
+            {
+                CommandType = CommandType.StoredProcedure,
+            };
 
-            string commandText = string.Format(CultureInfo.CurrentCulture, commandTemplate, offset, limit);
-            return this.ExecuteReader(commandText);
+            const string offsetVar = "offset";
+            command.Parameters.Add(offsetVar, SqlDbType.Int);
+            command.Parameters[offsetVar].Value = offset;
+
+            const string limitVar = "limit";
+            command.Parameters.Add(limitVar, SqlDbType.Int);
+            command.Parameters[limitVar].Value = limit;
+
+            await this.connection.OpenAsync();
+
+            var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                yield return CreateProductCategory(reader);
+            }
         }
 
         /// <inheritdoc/>
-        public IList<ProductCategoryTransferObject> SelectProductCategoriesByName(ICollection<string> productCategoryNames)
+        public async IAsyncEnumerable<ProductCategoryTransferObject> SelectProductCategoriesByName(ICollection<string> productCategoryNames)
         {
             if (productCategoryNames == null)
             {
@@ -134,39 +144,47 @@ FETCH FIRST {1} ROWS ONLY";
                 throw new ArgumentException("Collection is empty.", nameof(productCategoryNames));
             }
 
-            const string commandTemplate =
-@"SELECT c.CategoryID, c.CategoryName, c.Description, c.Picture FROM dbo.Categories as c
-WHERE c.CategoryName in ('{0}')
-ORDER BY c.CategoryID";
+            await using var command = new SqlCommand("SelectCategoriesByName", this.connection)
+            {
+                CommandType = CommandType.StoredProcedure,
+            };
 
-            string commandText = string.Format(CultureInfo.CurrentCulture, commandTemplate, string.Join("', '", productCategoryNames));
-            return this.ExecuteReader(commandText);
+            const string namesVar = "names";
+            command.Parameters.Add(namesVar, SqlDbType.Structured);
+            command.Parameters[namesVar].TypeName = "StringCollection";
+            command.Parameters[namesVar].Value = productCategoryNames;
+
+            await this.connection.OpenAsync();
+
+            var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                yield return CreateProductCategory(reader);
+            }
         }
 
         /// <inheritdoc/>
-        public bool UpdateProductCategory(ProductCategoryTransferObject productCategory)
+        public async Task<bool> UpdateProductCategory(ProductCategoryTransferObject productCategory)
         {
             if (productCategory == null)
             {
                 throw new ArgumentNullException(nameof(productCategory));
             }
 
-            const string commandText =
-@"UPDATE dbo.Categories SET CategoryName = @categoryName, Description = @description, Picture = @picture
-WHERE CategoryID = @categoryId
-SELECT @@ROWCOUNT";
-
-            using (var command = new SqlCommand(commandText, this.connection))
+            await using var command = new SqlCommand("UpdateCategory", this.connection)
             {
-                AddSqlParameters(productCategory, command);
+                CommandType = CommandType.StoredProcedure,
+            };
 
-                const string categoryId = "@categoryId";
-                command.Parameters.Add(categoryId, SqlDbType.Int);
-                command.Parameters[categoryId].Value = productCategory.Id;
+            const string categoryIdVar = "categoryId";
+            command.Parameters.Add(categoryIdVar, SqlDbType.Int);
+            command.Parameters[categoryIdVar].Value = productCategory.Id;
 
-                var result = command.ExecuteScalar();
-                return ((int)result) > 0;
-            }
+            AddSqlParameters(productCategory, command);
+
+            await this.connection.OpenAsync();
+
+            return (int)await command.ExecuteScalarAsync() > 0;
         }
 
         private static ProductCategoryTransferObject CreateProductCategory(SqlDataReader reader)
@@ -192,10 +210,7 @@ SELECT @@ROWCOUNT";
 
             return new ProductCategoryTransferObject
             {
-                Id = id,
-                Name = name,
-                Description = description,
-                Picture = picture,
+                Id = id, Name = name, Description = description, Picture = picture,
             };
         }
 
@@ -230,21 +245,6 @@ SELECT @@ROWCOUNT";
             {
                 command.Parameters[pictureParameter].Value = DBNull.Value;
             }
-        }
-
-        private IList<ProductCategoryTransferObject> ExecuteReader(string commandText)
-        {
-            var productCategories = new List<ProductCategoryTransferObject>();
-            using (var command = new SqlCommand(commandText, this.connection))
-            using (var reader = command.ExecuteReader())
-            {
-                while (reader.Read())
-                {
-                    productCategories.Add(CreateProductCategory(reader));
-                }
-            }
-
-            return productCategories;
         }
     }
 }

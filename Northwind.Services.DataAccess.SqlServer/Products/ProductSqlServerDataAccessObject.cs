@@ -39,9 +39,10 @@ namespace Northwind.DataAccess.Products
             {
                 CommandType = CommandType.StoredProcedure,
             };
+
             AddSqlParameters(product, command);
             await this.connection.OpenAsync();
-            var result = (int) await command.ExecuteScalarAsync();
+            var result = (int)await command.ExecuteScalarAsync();
             return result;
         }
 
@@ -421,16 +422,6 @@ namespace Northwind.DataAccess.Products
             const string discontinuedParameter = "@discontinued";
             command.Parameters.Add(discontinuedParameter, SqlDbType.Bit);
             command.Parameters[discontinuedParameter].Value = product.Discontinued;
-        }
-
-        private async IAsyncEnumerable<ProductTransferObject> ExecuteReader(string commandText)
-        {
-            await using var command = new SqlCommand(commandText, this.connection);
-            await using var reader = await command.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                yield return CreateProduct(reader);
-            }
         }
     }
 }

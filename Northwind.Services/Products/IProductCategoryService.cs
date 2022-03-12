@@ -45,7 +45,7 @@ namespace Northwind.Services.Products
         /// </summary>
         /// <param name="names">A list of product category names.</param>
         /// <returns>A list of product categories with specified names.</returns>
-        IAsyncEnumerable<ProductCategory> GetCategoriesByNameAsync(IList<string> names);
+        IAsyncEnumerable<ProductCategory> GetCategoriesByNameAsync(ICollection<string> names);
 
         /// <summary>
         /// Updates a product category.
