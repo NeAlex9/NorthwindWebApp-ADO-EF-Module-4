@@ -149,10 +149,10 @@ namespace Northwind.DataAccess.Products
                 CommandType = CommandType.StoredProcedure,
             };
 
-            const string namesVar = "@names";
+            const string namesVar = "@categories";
             command.Parameters.Add(namesVar, SqlDbType.Structured);
             command.Parameters[namesVar].TypeName = "StringCollection";
-            command.Parameters[namesVar].Value = productNames;
+            command.Parameters[namesVar].Value = CreateDataTable(productNames, "name");
 
             await this.connection.OpenAsync();
             await using var reader = await command.ExecuteReaderAsync();
@@ -204,7 +204,7 @@ namespace Northwind.DataAccess.Products
             const string namesVar = "@categories";
             command.Parameters.Add(namesVar, SqlDbType.Structured);
             command.Parameters[namesVar].TypeName = "IntCollection";
-            command.Parameters[namesVar].Value = collectionOfCategoryId;
+            command.Parameters[namesVar].Value = CreateDataTable(collectionOfCategoryId, "id");
 
             await this.connection.OpenAsync();
             await using var reader = await command.ExecuteReaderAsync();
@@ -422,6 +422,18 @@ namespace Northwind.DataAccess.Products
             const string discontinuedParameter = "@discontinued";
             command.Parameters.Add(discontinuedParameter, SqlDbType.Bit);
             command.Parameters[discontinuedParameter].Value = product.Discontinued;
+        }
+
+        private static DataTable CreateDataTable<T>(IEnumerable<T> collection, string fieldName)
+        {
+            DataTable table = new DataTable();
+            table.Columns.Add(fieldName, typeof(T));
+            foreach (T id in collection)
+            {
+                table.Rows.Add(id);
+            }
+
+            return table;
         }
     }
 }

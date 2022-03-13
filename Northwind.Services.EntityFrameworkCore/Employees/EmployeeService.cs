@@ -13,7 +13,6 @@ namespace Northwind.Services.EntityFrameworkCore.Employees
     /// </summary>
     public class EmployeeService : IEmployeeService
     {
-        private readonly NorthwindDataAccessFactory factory;
         private readonly IMapper mapper;
 
         /// <summary>
@@ -21,11 +20,11 @@ namespace Northwind.Services.EntityFrameworkCore.Employees
         /// </summary>
         /// <param name="factory"></param>
         /// <param name="mapper"></param>
-        public EmployeeService(NorthwindDataAccessFactory factory, IMapper mapper)
+        public EmployeeService(IMapper mapper)
         {
-            this.factory = factory;
             this.mapper = mapper;
         }
+
 
         /// <inheritdoc />
         public IAsyncEnumerable<Employee> GetEmployeesAsync(int offset, int limit)
@@ -34,13 +33,13 @@ namespace Northwind.Services.EntityFrameworkCore.Employees
         }
 
         /// <inheritdoc />
-        public Task<(bool isSuccess, Employee product)> TryGetEmployeeIdAsync(int employeeId)
+        public Task<(bool isSuccess, Employee employee)> TryGetEmployeeIdAsync(int employeeId)
         {
             throw new NotImplementedException();
         }
 
         /// <inheritdoc />
-        public Task<int> CreateEmployeeIdAsync(Employee employee)
+        public Task<int> CreateEmployeeAsync(Employee employee)
         {
             throw new NotImplementedException();
         }

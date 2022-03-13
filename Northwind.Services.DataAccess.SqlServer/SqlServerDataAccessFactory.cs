@@ -31,6 +31,6 @@ namespace Northwind.DataAccess
 
         /// <inheritdoc />
         public override IEmployeeDataAccessObject GetEmployeeDataAccessObject() =>
-            new EmployeeSqlServerDataAccessObject();
+            new EmployeeSqlServerDataAccessObject(this.sqlConnection);
     }
 }

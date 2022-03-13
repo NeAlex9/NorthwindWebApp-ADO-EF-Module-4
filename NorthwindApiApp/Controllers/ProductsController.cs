@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.Web.Http;
 using Microsoft.AspNetCore.Mvc;
 using Northwind.Services.Products;
 
@@ -18,7 +17,7 @@ namespace NorthwindApiApp.Controllers
             this.productService = productService ?? throw new ArgumentNullException(nameof(productService));
         }
 
-        [Microsoft.AspNetCore.Mvc.HttpGet("{id}")]
+        [HttpGet("{id}")]
         public async Task<ActionResult<Product>> GetProductById(int id)
         {
             (bool isSuccess, Product product) = await this.productService.TryGetProductAsync(id);
@@ -30,7 +29,7 @@ namespace NorthwindApiApp.Controllers
             return this.NotFound();
         }
 
-        [Microsoft.AspNetCore.Mvc.HttpGet()]
+        [HttpGet()]
         public async IAsyncEnumerable<Product> GetProduct(int offset, int limit)
         {
             await foreach (var product in this.productService
@@ -40,7 +39,7 @@ namespace NorthwindApiApp.Controllers
             }
         }
 
-        [Microsoft.AspNetCore.Mvc.HttpPost]
+        [HttpPost]
         public async Task<ActionResult<Product>> CreateProduct(Product product)
         {
             var productId = await this.productService.CreateProductAsync(product);
@@ -51,7 +50,7 @@ namespace NorthwindApiApp.Controllers
             }, product);
         }
 
-        [Microsoft.AspNetCore.Mvc.HttpDelete("{id}")]
+        [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProduct(int id)
         {
             var result = await this.productService.DeleteProductAsync(id);
@@ -63,8 +62,8 @@ namespace NorthwindApiApp.Controllers
             return this.Ok();
         }
 
-        [Microsoft.AspNetCore.Mvc.HttpGet("ByNames/{names}")]
-        public async IAsyncEnumerable<Product> GetProductsByName([FromUri] ICollection<string> names)
+        [HttpGet("ByNames/{names}")]
+        public async IAsyncEnumerable<Product> GetProductsByName([FromBody] ICollection<string> names)
         {
             await foreach (var product in this.productService
                                .GetProductsByNameAsync(names))
@@ -73,8 +72,8 @@ namespace NorthwindApiApp.Controllers
             }
         }
 
-        [Microsoft.AspNetCore.Mvc.HttpGet("ByCategory/{categoryId}")]
-        public async IAsyncEnumerable<Product> GetProductsByCategory([FromUri] ICollection<int> categories)
+        [HttpGet("ByCategory")]
+        public async IAsyncEnumerable<Product> GetProductsByCategory([FromQuery]ICollection<int> categories)
         {
             await foreach (var product in this.productService
                                .GetProductsByCategoryAsync(categories))
@@ -83,7 +82,7 @@ namespace NorthwindApiApp.Controllers
             }
         }
 
-        [Microsoft.AspNetCore.Mvc.HttpPut]
+        [HttpPut]
         public async Task<IActionResult> UpdateProduct(int productId, Product product)
         {
             product.Id = productId;

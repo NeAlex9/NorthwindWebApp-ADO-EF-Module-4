@@ -86,14 +86,16 @@ namespace Northwind.DataAccess.Products
             command.Parameters.Add(varName, SqlDbType.Int);
             command.Parameters[varName].Value = productCategoryId;
 
-            await this.connection.OpenAsync();
-            var reader = await command.ExecuteReaderAsync();
+            this.connection.Open();
+            await using var reader = await command.ExecuteReaderAsync();
             if (!(await reader.ReadAsync()))
             {
                 throw new ProductNotFoundException(productCategoryId);
             }
 
-            return CreateProductCategory(reader);
+            var category = CreateProductCategory(reader);
+            //await this.connection.CloseAsync();
+            return category;
         }
 
         /// <inheritdoc/>
@@ -149,10 +151,10 @@ namespace Northwind.DataAccess.Products
                 CommandType = CommandType.StoredProcedure,
             };
 
-            const string namesVar = "names";
+            const string namesVar = "@names";
             command.Parameters.Add(namesVar, SqlDbType.Structured);
             command.Parameters[namesVar].TypeName = "StringCollection";
-            command.Parameters[namesVar].Value = productCategoryNames;
+            command.Parameters[namesVar].Value = CreateDataTable(productCategoryNames, "name");
 
             await this.connection.OpenAsync();
 
@@ -182,7 +184,10 @@ namespace Northwind.DataAccess.Products
 
             AddSqlParameters(productCategory, command);
 
-            await this.connection.OpenAsync();
+            if (this.connection.State == ConnectionState.Closed)
+            {
+                await this.connection.OpenAsync();
+            }
 
             return (int)await command.ExecuteScalarAsync() > 0;
         }
@@ -245,6 +250,18 @@ namespace Northwind.DataAccess.Products
             {
                 command.Parameters[pictureParameter].Value = DBNull.Value;
             }
+        }
+
+        private static DataTable CreateDataTable<T>(IEnumerable<T> collection, string fieldName)
+        {
+            DataTable table = new DataTable();
+            table.Columns.Add(fieldName, typeof(T));
+            foreach (T id in collection)
+            {
+                table.Rows.Add(id);
+            }
+
+            return table;
         }
     }
 }

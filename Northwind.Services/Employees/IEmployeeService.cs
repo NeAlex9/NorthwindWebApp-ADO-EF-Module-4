@@ -24,14 +24,14 @@ namespace Northwind.Services.Employees
         /// </summary>
         /// <param name="employeeId">A product identifier.</param>
         /// <returns>Returns true if a product is returned; otherwise false.</returns>
-        Task<(bool isSuccess, Employee product)> TryGetEmployeeIdAsync(int employeeId);
+        Task<(bool isSuccess, Employee employee)> TryGetEmployeeIdAsync(int employeeId);
 
         /// <summary>
         /// Creates a new employee.
         /// </summary>
         /// <param name="employee">A <see cref="Employee"/> to create.</param>
         /// <returns>An identifier of a created product.</returns>
-        Task<int> CreateEmployeeIdAsync(Employee employee);
+        Task<int> CreateEmployeeAsync(Employee employee);
 
         /// <summary>
         /// Destroys an existed employee.

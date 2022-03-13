@@ -1,29 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Threading.Tasks;
-using AutoMapper;
-using Northwind.DataAccess;
-using Northwind.DataAccess.Products;
-using Northwind.Services.Products;
-
-namespace Northwind.Services.DataAccess.ProductService
+﻿namespace Northwind.Services.DataAccess.EmployeeService
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Text;
+    using System.Threading.Tasks;
+    using Northwind.DataAccess;
+    using Northwind.DataAccess.Products;
+    using Northwind.Services.DataAccess.ProductService;
+    using Northwind.Services.Employees;
+
     /// <summary>
-    /// Category picture service.
+    /// Employee picture service.
     /// </summary>
-    public class ProductCategoryPictureService : IProductCategoryPictureService
+    public class EmployeePictureService : IEmployeePictureService
     {
         private const int ReservedBytes = 78;
         private readonly NorthwindDataAccessFactory factory;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ProductCategoryPictureService"/> class.
+        /// Initializes a new instance of the <see cref="EmployeePictureService"/> class.
         /// </summary>
         /// <param name="factory">factory.</param>
         /// <param name="categoryToCategoryDto">category DTO mapper.</param>
-        public ProductCategoryPictureService(NorthwindDataAccessFactory factory)
+        public EmployeePictureService(NorthwindDataAccessFactory factory)
         {
             this.factory = factory;
         }
@@ -34,10 +34,10 @@ namespace Northwind.Services.DataAccess.ProductService
             try
             {
                 var dto = await this.factory
-                    .GetProductCategoryDataAccessObject()
-                    .FindProductCategory(categoryId);
-                var imageBytes = dto.Picture[ReservedBytes..];
-                return (true, imageBytes);
+                    .GetEmployeeDataAccessObject()
+                    .FindEmployeeAsync(categoryId);
+                var imageBytes = dto.Photo?[ReservedBytes..];
+                return imageBytes is null ? (false, null) : (true, imageBytes);
             }
             catch (ProductCategoryNotFoundException)
             {
@@ -46,7 +46,7 @@ namespace Northwind.Services.DataAccess.ProductService
         }
 
         /// <inheritdoc />
-        public async Task<bool> UpdatePictureAsync(int categoryId, Stream stream)
+        public async Task<bool> UpdatePictureAsync(int employeeId, Stream stream)
         {
             try
             {
@@ -55,22 +55,22 @@ namespace Northwind.Services.DataAccess.ProductService
                     throw new NullReferenceException(nameof(stream));
                 }
 
-                var dao = this.factory.GetProductCategoryDataAccessObject();
-                var dto = await dao.FindProductCategory(categoryId);
-                dto.Picture = null;
+                var dao = this.factory.GetEmployeeDataAccessObject();
+                var dto = await dao.FindEmployeeAsync(employeeId);
+                dto.Photo = null;
                 await using var memoryStream = new MemoryStream();
                 await stream.CopyToAsync(memoryStream);
                 var bytes = memoryStream.ToArray();
-                if (dto.Picture is null)
+                if (dto.Photo is null)
                 {
-                    dto.Picture = bytes;
+                    dto.Photo = bytes;
                 }
                 else
                 {
-                    bytes.CopyTo(dto.Picture, ReservedBytes);
+                    bytes.CopyTo(dto.Photo, ReservedBytes);
                 }
 
-                return await dao.UpdateProductCategory(dto);
+                return await dao.UpdateEmployeeAsync(dto);
             }
             catch (ProductCategoryNotFoundException)
             {
@@ -83,14 +83,14 @@ namespace Northwind.Services.DataAccess.ProductService
         }
 
         /// <inheritdoc />
-        public async Task<bool> DeletePictureAsync(int categoryId)
+        public async Task<bool> DeletePictureAsync(int employeeId)
         {
             try
             {
-                var dao = this.factory.GetProductCategoryDataAccessObject();
-                var dto = await dao.FindProductCategory(categoryId);
-                dto.Picture = null;
-                return await dao.UpdateProductCategory(dto);
+                var dao = this.factory.GetEmployeeDataAccessObject();
+                var dto = await dao.FindEmployeeAsync(employeeId);
+                dto.Photo = null;
+                return await dao.UpdateEmployeeAsync(dto);
             }
             catch (ProductCategoryNotFoundException)
             {

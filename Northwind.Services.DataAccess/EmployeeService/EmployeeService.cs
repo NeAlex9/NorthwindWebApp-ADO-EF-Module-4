@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
+using Northwind.DataAccess;
 using Northwind.DataAccess.Employees;
 using Northwind.Services.Employees;
 
@@ -13,48 +14,70 @@ namespace Northwind.Services.DataAccess.EmployeeService
     /// </summary>
     public class EmployeeService : IEmployeeService
     {
-        private readonly SqlDataAccessFactory factory;
-        private readonly IMapper employeeToEmployeeDTO;
+        private readonly NorthwindDataAccessFactory factory;
+        private readonly IMapper mapper;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EmployeeService"/> class.
         /// </summary>
         /// <param name="factory">factory.</param>
         /// <param name="employeeToEmployeeDto">employee dto.</param>
-        public EmployeeService(SqlDataAccessFactory factory, IMapper employeeToEmployeeDto)
+        public EmployeeService(NorthwindDataAccessFactory factory, IMapper employeeToEmployeeDto)
         {
             this.factory = factory;
-            this.employeeToEmployeeDTO = employeeToEmployeeDto;
+            this.mapper = employeeToEmployeeDto;
         }
 
         /// <inheritdoc />
-        public IAsyncEnumerable<Employee> GetEmployeesAsync(int offset, int limit)
+        public async IAsyncEnumerable<Employee> GetEmployeesAsync(int offset, int limit)
         {
-            throw new NotImplementedException();
+            await foreach (var employee in this.factory
+                               .GetEmployeeDataAccessObject()
+                               .SelectEmployeesAsync(offset, limit))
+            {
+                yield return this.mapper.Map<Employee>(employee);
+            }
         }
 
         /// <inheritdoc />
-        public Task<(bool isSuccess, Employee product)> TryGetEmployeeIdAsync(int employeeId)
+        public async Task<(bool isSuccess, Employee employee)> TryGetEmployeeIdAsync(int employeeId)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var employeeDto = await this.factory
+                    .GetEmployeeDataAccessObject()
+                    .FindEmployeeAsync(employeeId);
+                return (true, this.mapper.Map<Employee>(employeeDto));
+            }
+            catch (EmployeeNotFoundException)
+            {
+                return (false, null);
+            }
         }
 
         /// <inheritdoc />
-        public Task<int> CreateEmployeeIdAsync(Employee employee)
+        public async Task<int> CreateEmployeeAsync(Employee employee)
         {
-            throw new NotImplementedException();
+            var result = await this.factory
+                .GetEmployeeDataAccessObject()
+                .InsertEmployeeAsync(this.mapper.Map<EmployeeTransferObject>(employee));
+            return result;
         }
 
         /// <inheritdoc />
-        public Task<bool> DeleteEmployeeAsync(int employeeId)
+        public async Task<bool> DeleteEmployeeAsync(int employeeId)
         {
-            throw new NotImplementedException();
+            return await this.factory
+                .GetEmployeeDataAccessObject()
+                .DeleteEmployeeAsync(employeeId);
         }
 
         /// <inheritdoc />
-        public Task<bool> UpdateEmployeeAsync(int employeeId, Employee employee)
+        public async Task<bool> UpdateEmployeeAsync(int employeeId, Employee employee)
         {
-            throw new NotImplementedException();
+            return await this.factory
+                .GetEmployeeDataAccessObject()
+                .UpdateEmployeeAsync(this.mapper.Map<EmployeeTransferObject>(employee));
         }
     }
 }

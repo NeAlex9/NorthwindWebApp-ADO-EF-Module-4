@@ -17,9 +17,9 @@ using Northwind.DataAccess;
 using Northwind.DataAccess.Employees;
 using Northwind.DataAccess.Products;
 using Northwind.Services.DataAccess;
+using Northwind.Services.DataAccess.EmployeeService;
 using Northwind.Services.DataAccess.ProductService;
 using Northwind.Services.Employees;
-using Northwind.Services.EntityFrameworkCore.Employees;
 using Northwind.Services.Products;
 
 namespace NorthwindApiApp
@@ -40,6 +40,7 @@ namespace NorthwindApiApp
                 .AddJsonOptions(option => option.JsonSerializerOptions.WriteIndented = true);
             services.AddSwaggerGen();
             services.AddTransient<IProductService, ProductService>()
+                .AddTransient<IEmployeePictureService, EmployeePictureService>()
                 .AddTransient<IProductCategoryService, ProductCategoryService>()
                 .AddTransient<IProductCategoryPictureService, ProductCategoryPictureService>()
                 .AddTransient<IEmployeeService, EmployeeService>()
