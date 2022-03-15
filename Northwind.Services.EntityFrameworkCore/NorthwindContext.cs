@@ -1,19 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Entity;
-using System.Text;
+﻿using Microsoft.EntityFrameworkCore;
+using Northwind.Services.Employees;
+using Northwind.Services.Products;
+
 
 namespace Northwind.Services.EntityFrameworkCore
 {
     public class NorthwindContext : DbContext
     {
-        private readonly DbContext context;
+        private readonly string connectionString;
 
-        protected NorthwindContext(DbContext context)
+        public NorthwindContext(string connectionString)
         {
-            this.context = context;
+            this.connectionString = connectionString;
         }
 
+        public virtual DbSet<Employee> Employees { get; set; }
+        public virtual DbSet<Product> Products { get; set; }
+        public virtual DbSet<ProductCategory> ProductCategories { get; set; }
 
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.UseSqlServer(this.connectionString);
+        }
     }
 }

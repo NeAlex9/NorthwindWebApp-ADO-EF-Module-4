@@ -73,7 +73,7 @@ namespace NorthwindApiApp.Controllers
         }
 
         [HttpGet("ByCategory")]
-        public async IAsyncEnumerable<Product> GetProductsByCategory([FromQuery]ICollection<int> categories)
+        public async IAsyncEnumerable<Product> GetProductsByCategory([FromQuery] ICollection<int> categories)
         {
             await foreach (var product in this.productService
                                .GetProductsByCategoryAsync(categories))

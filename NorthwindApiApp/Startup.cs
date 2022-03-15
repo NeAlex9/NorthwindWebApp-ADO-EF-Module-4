@@ -20,6 +20,7 @@ using Northwind.Services.DataAccess;
 using Northwind.Services.DataAccess.EmployeeService;
 using Northwind.Services.DataAccess.ProductService;
 using Northwind.Services.Employees;
+using Northwind.Services.EntityFrameworkCore;
 using Northwind.Services.Products;
 
 namespace NorthwindApiApp
@@ -39,7 +40,8 @@ namespace NorthwindApiApp
             services.AddControllers()
                 .AddJsonOptions(option => option.JsonSerializerOptions.WriteIndented = true);
             services.AddSwaggerGen();
-            services.AddTransient<IProductService, ProductService>()
+            services.AddTransient<IProductService, Northwind.Services.EntityFrameworkCore.Products.ProductService>()
+                .AddTransient(provider => new NorthwindContext(this.Configuration.GetConnectionString("SqlConnection")))
                 .AddTransient<IEmployeePictureService, EmployeePictureService>()
                 .AddTransient<IProductCategoryService, ProductCategoryService>()
                 .AddTransient<IProductCategoryPictureService, ProductCategoryPictureService>()
