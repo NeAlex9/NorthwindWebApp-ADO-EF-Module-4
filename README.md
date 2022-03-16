@@ -45,11 +45,11 @@ __Внимание!__ В этом модуле используется боль
 
 | Operation        | HTTP Verb | URI                  | Request body | Response body |
 | ---------------- | --------- | -------------------- | ------------ |  ------------ |
-| Create           |           | /api/categories      |              |               |
-| Read (all items) |           | /api/categories      |              |               |
-| Read (item)      |           | /api/categories/{id} |              |               |
-| Update           |           | /api/categories/{id} |              |               |
-| Delete           |           | /api/categories/{id} |              |               |
+| Create           | POST      | /api/Categories      |   Category   | Created category|
+| Read (all items) | GET       | /api/Categories      |   None       | All categories|
+| Read (item)      | GET       | /api/Categories/{id} |   None       | Category      |
+| Update           | PUT       | /api/Categories/{id} |   Category   | None          |
+| Delete           | DELETE    | /api/Categories/{id} |   None       | None          |
 
 6. Реализуйте все методы для _ProductCategoriesController_, используя методы интерфейса _IProductManagementService_. См. [Controller action return types in ASP.NET Core web API](https://docs.microsoft.com/en-us/aspnet/core/web-api/action-return-types).
 7. Реализуйте в _ProductManagementService_ использованные методы интерфейса _IProductManagementService_. В качестве хранилища используйте in-memory database. Добавьте классы - контекст _NorthwindContext_ и необходимые сущности. Запустите приложение и проверьте работоспособность методов при помощи Postman.
@@ -57,11 +57,11 @@ __Внимание!__ В этом модуле используется боль
 
 | Operation        | HTTP Verb | URI                  | Request body | Response body |
 | ---------------- | --------- | -------------------- | ------------ | ------------- |
-| Create           |           |                      |              |               |
-| Read (all items) |           |                      |              |               |
-| Read (item)      |           |                      |              |               |
-| Update           |           |                      |              |               |
-| Delete           |           |                      |              |               |
+| Create           |  POST     | /api/Products        | Product      | Created product|
+| Read (all items) |  GET      | /api/Products        | None         | Product       |
+| Read (item)      |  GET      | /api/Products/{id}   | None         | All prodcuts  |
+| Update           |  PUT      | /api/Products/{id}   | Product      | None          |
+| Delete           |  DELETE   | /api/Products/{id}   | None         | None          |
 
 9. Реализуйте в _ProductCategoriesController_ новые методы для управления картинкой (поток байтов) для категории. См. [Upload files in ASP.NET Core](https://docs.microsoft.com/en-us/aspnet/core/mvc/models/file-uploads), [IFormFile](https://docs.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.http.iformfile) и [ControllerBase.File](https://docs.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.mvc.controllerbase.file). *[_Данные изображения состоят из OLE header (78 байт) и BMP._](https://mathematica.stackexchange.com/questions/184743/how-to-extract-bitmap-image-from-sql-records)
 
@@ -145,11 +145,18 @@ services.AddTransient<DataAccess.NorthwindDataAccessFactory, DataAccess.SqlServe
 
 | Operation        | HTTP Verb | URI                  | Request body | Response body |
 | ---------------- | --------- | -------------------- | ------------ | ------------- |
-| Create           |           |                      |              |               |
-| Read (all items) |           |                      |              |               |
-| Read (item)      |           |                      |              |               |
-| Update           |           |                      |              |               |
-| Delete           |           |                      |              |               |
+| Create           |  POST     | /api/Employees       | Employee     | Created Employee|
+| Read (all items) |  GET      | /api/Employees       | None         | Product       |
+| Read (item)      |  GET      | /api/Employees/{id}  | None         | All Employees |
+| Update           |  PUT      | /api/Employees/{id}  | Employee     | None          |
+| Delete           |  DELETE   | /api/Employees/{id}  | None         | None          |
+
+
+| Operation        | HTTP Verb | URI                                  | Request body    | Response body  |
+| ---------------- | --------- | ------------------------------------ | --------------- | -------------- |
+| Upload picture   | PUT       | /api/Employees/{employeeId}/picture  | Picture stream  | None           |
+| Get picture      | GET       | /api/Employees/{employeeId}/picture  | None            | Picture stream |
+| Delete picture   | DELETE    | /api/Employees/{employeeId}/picture  | None            | None           |
 
 
 3. Добавьте новый контроллер _EmployeesController_, реализуйте методы.
