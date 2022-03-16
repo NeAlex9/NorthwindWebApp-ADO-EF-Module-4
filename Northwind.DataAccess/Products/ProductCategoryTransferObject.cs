@@ -28,6 +28,6 @@ namespace Northwind.DataAccess.Products
         /// <summary>
         /// Gets or sets a product category picture.
         /// </summary>
-        public byte[] Picture { get; set; }
+        public byte[]? Picture { get; set; }
     }
 }

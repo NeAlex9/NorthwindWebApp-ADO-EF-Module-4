@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Northwind.DataAccess.Products;
 using Northwind.Services.Products;
 
 namespace Northwind.Services.EntityFrameworkCore.Products
@@ -12,38 +12,42 @@ namespace Northwind.Services.EntityFrameworkCore.Products
     public class ProductService : IProductService
     {
         private readonly NorthwindContext context;
+        private readonly IMapper mapper;
 
-        public ProductService(NorthwindContext context)
+        public ProductService(NorthwindContext context, IMapper mapper)
         {
+            this.mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             this.context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         /// <inheritdoc />
         public async IAsyncEnumerable<Product> GetProductsAsync(int offset, int limit)
         {
-            await foreach (var product in this.context
+            await foreach (var productDto in this.context
                                .Products
+                               .AsNoTracking()
                                .Skip(offset)
                                .Take(limit)
                                .AsAsyncEnumerable())
             {
-                yield return product;
+                yield return this.mapper.Map<Product>(productDto);
             }
         }
 
         /// <inheritdoc />
         public async Task<(bool isSuccess, Product product)> TryGetProductAsync(int productId)
         {
-            var product = await this.context
+            var productDto = await this.context
                 .Products
+                .AsNoTracking()
                 .Where(product => product.Id == productId)
                 .FirstOrDefaultAsync();
-            if (product is null)
+            if (productDto is null)
             {
                 return (false, null);
             }
 
-            return (true, product);
+            return (true, this.mapper.Map<Product>(productDto));
         }
 
         /// <inheritdoc />
@@ -54,8 +58,8 @@ namespace Northwind.Services.EntityFrameworkCore.Products
                 throw new ArgumentNullException(nameof(product));
             }
 
-            await this.context
-                .AddAsync(product);
+            await this.context.AddAsync(product);
+            await this.context.SaveChangesAsync();
             return product.Id;
         }
 
@@ -66,11 +70,16 @@ namespace Northwind.Services.EntityFrameworkCore.Products
                 .Products
                 .Where(product => productId == product.Id)
                 .FirstOrDefaultAsync();
+            if (product is null)
+            {
+                return false;
+            }
+
             this.context
                 .Remove(product);
-            return await this.context
-                .SaveChangesAsync() > 0;
-
+            var updatedRows = await this.context
+                .SaveChangesAsync();
+            return updatedRows > 0;
         }
 
         /// <inheritdoc />
@@ -81,12 +90,14 @@ namespace Northwind.Services.EntityFrameworkCore.Products
                 throw new ArgumentNullException(nameof(names));
             }
 
-            var products = this.context.Products
+            var productsDto = this.context
+                .Products
+                .AsNoTracking()
                 .Where(product => names.Any(name => name == product.Name))
                 .AsAsyncEnumerable();
-            await foreach (var product in products)
+            await foreach (var productDto in productsDto)
             {
-                yield return product;
+                yield return this.mapper.Map<Product>(productDto);
             }
         }
 
@@ -98,23 +109,16 @@ namespace Northwind.Services.EntityFrameworkCore.Products
                 throw new ArgumentNullException(nameof(product));
             }
 
-            var updatedProduct = await this.context
+            var updatedProductDto = await this.context
                 .Products
                 .Where(p => productId == p.Id)
                 .FirstOrDefaultAsync();
-            if (updatedProduct is not null)
+            if (updatedProductDto is null)
             {
-                updatedProduct.Name = product.Name;
-                updatedProduct.CategoryId = product.CategoryId;
-                updatedProduct.Discontinued = product.Discontinued;
-                updatedProduct.QuantityPerUnit = product.QuantityPerUnit;
-                updatedProduct.ReorderLevel = product.ReorderLevel;
-                updatedProduct.SupplierId = product.SupplierId;
-                updatedProduct.UnitPrice = product.UnitPrice;
-                updatedProduct.UnitsInStock = product.UnitsInStock;
-                updatedProduct.UnitsOnOrder = product.UnitsOnOrder;
+                return false;
             }
 
+            UpdateProductDto(updatedProductDto, product);
             return await this.context.SaveChangesAsync() > 0;
         }
 
@@ -126,13 +130,28 @@ namespace Northwind.Services.EntityFrameworkCore.Products
                 throw new ArgumentNullException(nameof(categoriesId));
             }
 
-            var products = this.context.Products
-                .Where(product => categoriesId.Any(id => id == product.Id))
+            var productsDto = this.context
+                .Products
+                .AsNoTracking()
+                .Where(product => categoriesId.Any(id => id == (product.CategoryId ?? -1)))
                 .AsAsyncEnumerable();
-            await foreach (var product in products)
+            await foreach (var productDto in productsDto)
             {
-                yield return product;
+                yield return this.mapper.Map<Product>(productDto);
             }
+        }
+
+        private static void UpdateProductDto(ProductTransferObject dto, Product product)
+        {
+            dto.Name = product.Name;
+            dto.CategoryId = product.CategoryId;
+            dto.Discontinued = product.Discontinued;
+            dto.QuantityPerUnit = product.QuantityPerUnit;
+            dto.ReorderLevel = product.ReorderLevel;
+            dto.SupplierId = product.SupplierId;
+            dto.UnitPrice = product.UnitPrice;
+            dto.UnitsInStock = product.UnitsInStock;
+            dto.UnitsOnOrder = product.UnitsOnOrder;
         }
     }
 }

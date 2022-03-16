@@ -67,8 +67,8 @@ namespace NorthwindApiApp.Controllers
             return this.Ok();
         }
 
-        [HttpGet("ByName/{name}")]
-        public async IAsyncEnumerable<ProductCategory> GetCategoriesByName(ICollection<string> names)
+        [HttpGet("ByName")]
+        public async IAsyncEnumerable<ProductCategory> GetCategoriesByName([FromQuery]ICollection<string> names)
         {
             await foreach (var category in this.categoryService
                                .GetCategoriesByNameAsync(names))
@@ -125,7 +125,7 @@ namespace NorthwindApiApp.Controllers
         public async Task<IActionResult> DeleteCategoryPicture(int categoryId)
         {
             var result = await this.pictureService.DeletePictureAsync(categoryId);
-           if (!result)
+            if (!result)
             {
                 return this.NotFound();
             }

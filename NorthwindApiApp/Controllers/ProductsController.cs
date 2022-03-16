@@ -62,8 +62,8 @@ namespace NorthwindApiApp.Controllers
             return this.Ok();
         }
 
-        [HttpGet("ByNames/{names}")]
-        public async IAsyncEnumerable<Product> GetProductsByName([FromBody] ICollection<string> names)
+        [HttpGet("ByNames")]
+        public async IAsyncEnumerable<Product> GetProductsByName([FromQuery] ICollection<string> names)
         {
             await foreach (var product in this.productService
                                .GetProductsByNameAsync(names))

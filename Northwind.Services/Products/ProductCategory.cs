@@ -21,11 +21,5 @@ namespace Northwind.Services.Products
         /// Gets or sets a product category description.
         /// </summary>
         public string Description { get; set; }
-
-        /// <summary>
-        /// Gets or sets picture.
-        /// </summary>
-        public byte[] Picture { get; set; }
-
     }
 }
