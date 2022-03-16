@@ -1,4 +1,8 @@
-﻿namespace Northwind.DataAccess
+﻿// <copyright file="SqlServerDataAccessFactory.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+namespace Northwind.DataAccess
 {
     using System;
     using System.Data.SqlClient;

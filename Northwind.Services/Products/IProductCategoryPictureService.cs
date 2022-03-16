@@ -15,7 +15,6 @@ namespace Northwind.Services.Products
         /// Try to show a product category picture.
         /// </summary>
         /// <param name="categoryId">A product category identifier.</param>
-        /// <param name="bytes">An array of picture bytes.</param>
         /// <returns>True if a product category is exist; otherwise false.</returns>
         Task<(bool IsSuccess, byte[] imageBytes)> TryGetPictureAsync(int categoryId);
 

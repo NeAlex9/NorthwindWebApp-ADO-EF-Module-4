@@ -1,4 +1,8 @@
-﻿namespace Northwind.Services.DataAccess.ProductService
+﻿// <copyright file="ProductCategoryPictureService.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+namespace Northwind.Services.DataAccess.ProductService
 {
     using System;
     using System.IO;

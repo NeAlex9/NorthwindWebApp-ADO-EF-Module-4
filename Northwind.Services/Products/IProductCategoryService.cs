@@ -22,7 +22,6 @@ namespace Northwind.Services.Products
         /// Try to show a product category with specified identifier.
         /// </summary>
         /// <param name="categoryId">A product category identifier.</param>
-        /// <param name="productCategory">A product category to return.</param>
         /// <returns>Returns true if a product category is returned; otherwise false.</returns>
         Task<(bool isSuccess, ProductCategory productCategory)> TryGetCategoryAsync(int categoryId);
 
@@ -54,6 +53,5 @@ namespace Northwind.Services.Products
         /// <param name="productCategory">A <see cref="ProductCategory"/>.</param>
         /// <returns>True if a product category is updated; otherwise false.</returns>
         Task<bool> UpdateCategoriesAsync(int categoryId, ProductCategory productCategory);
-
     }
 }

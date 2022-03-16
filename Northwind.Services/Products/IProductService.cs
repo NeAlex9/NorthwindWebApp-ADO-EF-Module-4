@@ -21,7 +21,6 @@ namespace Northwind.Services.Products
         /// Try to show a product with specified identifier.
         /// </summary>
         /// <param name="productId">A product identifier.</param>
-        /// <param name="product">A product to return.</param>
         /// <returns>Returns true if a product is returned; otherwise false.</returns>
         Task<(bool isSuccess, Product product)> TryGetProductAsync(int productId);
 
@@ -57,8 +56,8 @@ namespace Northwind.Services.Products
         /// <summary>
         /// Shows a list of products that belongs to a specified category.
         /// </summary>
-        /// <param name="categoryId">A product category identifier.</param>
-        /// <returns>A <see cref="IList{T}"/> of <see cref="Product"/>.</returns>
+        /// <param name="categoriesId">ids.</param>
+        /// <returns>A of collection.</returns>
         IAsyncEnumerable<Product> GetProductsByCategoryAsync(ICollection<int> categoriesId);
     }
 }

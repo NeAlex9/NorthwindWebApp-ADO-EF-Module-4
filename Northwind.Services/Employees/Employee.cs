@@ -71,7 +71,7 @@ namespace Northwind.Services.Employees
         public string? Country { get; set; }
 
         /// <summary>
-        /// Gets or set home phone.
+        /// Gets or sets home phone.
         /// </summary>
         public string? HomePhone { get; set; }
 

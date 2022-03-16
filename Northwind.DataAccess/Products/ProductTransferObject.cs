@@ -16,7 +16,7 @@ namespace Northwind.DataAccess.Products
         /// <summary>
         /// Gets or sets a product name.
         /// </summary>
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         /// Gets or sets a supplier identifier.
@@ -31,7 +31,7 @@ namespace Northwind.DataAccess.Products
         /// <summary>
         /// Gets or sets a quantity per unit.
         /// </summary>
-        public string QuantityPerUnit { get; set; }
+        public string? QuantityPerUnit { get; set; }
 
         /// <summary>
         /// Gets or sets a unit price.

@@ -1,15 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Threading.Tasks;
-using AutoMapper;
-using Northwind.DataAccess;
-using Northwind.DataAccess.Products;
-using Northwind.Services.Products;
+﻿// <copyright file="ProductService.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace Northwind.Services.DataAccess.ProductService
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Text;
+    using System.Threading.Tasks;
+    using AutoMapper;
+    using Northwind.DataAccess;
+    using Northwind.DataAccess.Products;
+    using Northwind.Services.Products;
+
     /// <summary>
     /// Represent a class that manages products.
     /// </summary>

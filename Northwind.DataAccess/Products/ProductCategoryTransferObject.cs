@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 
 #pragma warning disable CA1819 // Properties should not return arrays
+#pragma warning disable SA1011 // Closing square brackets should be spaced correctly
 
 namespace Northwind.DataAccess.Products
 {
@@ -18,12 +19,12 @@ namespace Northwind.DataAccess.Products
         /// <summary>
         /// Gets or sets a product category name.
         /// </summary>
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         /// Gets or sets a product category description.
         /// </summary>
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         /// <summary>
         /// Gets or sets a product category picture.

@@ -28,7 +28,7 @@ namespace Northwind.DataAccess.Employees
         /// <summary>
         /// Inserts employee.
         /// </summary>
-        /// <param name="employeeId">id.</param>
+        /// <param name="employee">employee.</param>
         /// <returns>true or false.</returns>
         public Task<int> InsertEmployeeAsync(EmployeeTransferObject employee);
 
@@ -42,7 +42,7 @@ namespace Northwind.DataAccess.Employees
         /// <summary>
         /// Updates employee by id.
         /// </summary>
-        /// <param name="employeeId">id.</param>
+        /// <param name="employee">employee.</param>
         /// <returns>true or false.</returns>
         public Task<bool> UpdateEmployeeAsync(EmployeeTransferObject employee);
     }

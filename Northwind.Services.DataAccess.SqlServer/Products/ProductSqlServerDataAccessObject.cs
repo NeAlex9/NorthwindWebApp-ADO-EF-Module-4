@@ -1,4 +1,8 @@
-﻿namespace Northwind.Services.DataAccess.SqlServer.Products
+﻿// <copyright file="ProductSqlServerDataAccessObject.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+namespace Northwind.Services.DataAccess.SqlServer.Products
 {
     using System;
     using System.Collections.Generic;
@@ -31,15 +35,20 @@
                 throw new ArgumentNullException(nameof(product));
             }
 
-            await using var command = new SqlCommand("InsertProduct", this.connection)
-            {
-                CommandType = CommandType.StoredProcedure,
-            };
+            return await Insert();
 
-            AddSqlParameters(product, command);
-            await this.connection.OpenAsync();
-            var result = (int)await command.ExecuteScalarAsync();
-            return result;
+            async Task<int> Insert()
+            {
+                await using var command = new SqlCommand("InsertProduct", this.connection)
+                {
+                    CommandType = CommandType.StoredProcedure,
+                };
+
+                AddSqlParameters(product, command);
+                await this.connection.OpenAsync();
+                var result = (int)await command.ExecuteScalarAsync();
+                return result;
+            }
         }
 
         /// <inheritdoc/>
@@ -50,18 +59,23 @@
                 throw new ArgumentException("Must be greater than zero.", nameof(productId));
             }
 
-            await using var command = new SqlCommand("DeleteProduct", this.connection)
+            return await Delete();
+
+            async Task<bool> Delete()
             {
-                CommandType = CommandType.StoredProcedure,
-            };
+                await using var command = new SqlCommand("DeleteProduct", this.connection)
+                {
+                    CommandType = CommandType.StoredProcedure,
+                };
 
-            const string productNameParameter = "@productId";
-            command.Parameters.Add(productNameParameter, SqlDbType.Int);
-            command.Parameters[productNameParameter].Value = productId;
+                const string productNameParameter = "@productId";
+                command.Parameters.Add(productNameParameter, SqlDbType.Int);
+                command.Parameters[productNameParameter].Value = productId;
 
-            await this.connection.OpenAsync();
-            var row = await command.ExecuteNonQueryAsync();
-            return row > 0;
+                await this.connection.OpenAsync();
+                var row = await command.ExecuteNonQueryAsync();
+                return row > 0;
+            }
         }
 
         /// <inheritdoc/>
@@ -72,28 +86,32 @@
                 throw new ArgumentException("Must be greater than zero.", nameof(productId));
             }
 
-            await using var command = new SqlCommand("FindProductById", this.connection)
+            return await Find();
+
+            async Task<ProductTransferObject> Find()
             {
-                CommandType = CommandType.StoredProcedure,
-            };
+                await using var command = new SqlCommand("FindProductById", this.connection)
+                {
+                    CommandType = CommandType.StoredProcedure,
+                };
 
-            const string productIdParameter = "@productId";
-            command.Parameters.Add(productIdParameter, SqlDbType.Int);
-            command.Parameters[productIdParameter].Value = productId;
+                const string productIdParameter = "@productId";
+                command.Parameters.Add(productIdParameter, SqlDbType.Int);
+                command.Parameters[productIdParameter].Value = productId;
 
-            await this.connection.OpenAsync();
-            await using var reader = await command.ExecuteReaderAsync();
+                await this.connection.OpenAsync();
+                await using var reader = await command.ExecuteReaderAsync();
 
-            if (!(await reader.ReadAsync()))
-            {
-                throw new ProductNotFoundException(productId);
+                if (!(await reader.ReadAsync()))
+                {
+                    throw new ProductNotFoundException(productId);
+                }
+
+                return CreateProduct(reader);
             }
-
-            return CreateProduct(reader);
         }
 
         /// <inheritdoc />
-
         public async IAsyncEnumerable<ProductTransferObject> SelectProducts(int offset, int limit)
         {
             if (offset < 0)
@@ -106,25 +124,33 @@
                 throw new ArgumentException("Must be greater than zero.", nameof(limit));
             }
 
-            await using var command = new SqlCommand("SelectProducts", this.connection)
+            await foreach (var p in Select())
             {
-                CommandType = CommandType.StoredProcedure,
-            };
+                yield return p;
+            }
 
-            const string offsetVar = "@offset";
-            command.Parameters.Add(offsetVar, SqlDbType.Int);
-            command.Parameters[offsetVar].Value = offset;
-
-            const string limitVar = "@limit";
-            command.Parameters.Add(limitVar, SqlDbType.Int);
-            command.Parameters[limitVar].Value = limit;
-
-            await this.connection.OpenAsync();
-
-            await using var reader = await command.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
+            async IAsyncEnumerable<ProductTransferObject> Select()
             {
-                yield return CreateProduct(reader);
+                await using var command = new SqlCommand("SelectProducts", this.connection)
+                {
+                    CommandType = CommandType.StoredProcedure,
+                };
+
+                const string offsetVar = "@offset";
+                command.Parameters.Add(offsetVar, SqlDbType.Int);
+                command.Parameters[offsetVar].Value = offset;
+
+                const string limitVar = "@limit";
+                command.Parameters.Add(limitVar, SqlDbType.Int);
+                command.Parameters[limitVar].Value = limit;
+
+                await this.connection.OpenAsync();
+
+                await using var reader = await command.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    yield return CreateProduct(reader);
+                }
             }
         }
 
@@ -141,22 +167,30 @@
                 throw new ArgumentException("Collection is empty.", nameof(productNames));
             }
 
-            await using var command = new SqlCommand("SelectProductsByName", this.connection)
+            await foreach (var p in Select())
             {
-                CommandType = CommandType.StoredProcedure,
-            };
+                yield return p;
+            }
 
-            const string namesVar = "@categories";
-            command.Parameters.Add(namesVar, SqlDbType.Structured);
-            command.Parameters[namesVar].TypeName = "StringCollection";
-            command.Parameters[namesVar].Value = CreateDataTable(productNames, "name");
-
-            await this.connection.OpenAsync();
-            await using var reader = await command.ExecuteReaderAsync();
-
-            while (await reader.ReadAsync())
+            async IAsyncEnumerable<ProductTransferObject> Select()
             {
-                yield return CreateProduct(reader);
+                await using var command = new SqlCommand("SelectProductsByName", this.connection)
+                {
+                    CommandType = CommandType.StoredProcedure,
+                };
+
+                const string namesVar = "@categories";
+                command.Parameters.Add(namesVar, SqlDbType.Structured);
+                command.Parameters[namesVar].TypeName = "StringCollection";
+                command.Parameters[namesVar].Value = CreateDataTable(productNames, "name");
+
+                await this.connection.OpenAsync();
+                await using var reader = await command.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    yield return CreateProduct(reader);
+                }
             }
         }
 
@@ -168,24 +202,29 @@
                 throw new ArgumentNullException(nameof(product));
             }
 
-            await using var command = new SqlCommand("UpdateProduct", this.connection)
+            return await Update();
+
+            async Task<bool> Update()
             {
-                CommandType = CommandType.StoredProcedure,
-            };
+                await using var command = new SqlCommand("UpdateProduct", this.connection)
+                {
+                    CommandType = CommandType.StoredProcedure,
+                };
 
-            const string productNameParameter = "@productId";
-            command.Parameters.Add(productNameParameter, SqlDbType.Int);
-            command.Parameters[productNameParameter].Value = product.Id;
+                const string productNameParameter = "@productId";
+                command.Parameters.Add(productNameParameter, SqlDbType.Int);
+                command.Parameters[productNameParameter].Value = product.Id;
 
-            AddSqlParameters(product, command);
+                AddSqlParameters(product, command);
 
-            if (this.connection.State == ConnectionState.Closed)
-            {
-                await this.connection.OpenAsync();
+                if (this.connection.State == ConnectionState.Closed)
+                {
+                    await this.connection.OpenAsync();
+                }
+
+                var result = await command.ExecuteNonQueryAsync();
+                return result > 0;
             }
-
-            var result = await command.ExecuteNonQueryAsync();
-            return result > 0;
         }
 
         /// <inheritdoc/>
@@ -196,22 +235,30 @@
                 throw new ArgumentNullException(nameof(collectionOfCategoryId));
             }
 
-            await using var command = new SqlCommand("SelectProductsByCategory", this.connection)
+            await foreach (var p in Select())
             {
-                CommandType = CommandType.StoredProcedure,
-            };
+                yield return p;
+            }
 
-            const string namesVar = "@categories";
-            command.Parameters.Add(namesVar, SqlDbType.Structured);
-            command.Parameters[namesVar].TypeName = "IntCollection";
-            command.Parameters[namesVar].Value = CreateDataTable(collectionOfCategoryId, "id");
-
-            await this.connection.OpenAsync();
-            await using var reader = await command.ExecuteReaderAsync();
-
-            while (await reader.ReadAsync())
+            async IAsyncEnumerable<ProductTransferObject> Select()
             {
-                yield return CreateProduct(reader);
+                await using var command = new SqlCommand("SelectProductsByCategory", this.connection)
+                {
+                    CommandType = CommandType.StoredProcedure,
+                };
+
+                const string namesVar = "@categories";
+                command.Parameters.Add(namesVar, SqlDbType.Structured);
+                command.Parameters[namesVar].TypeName = "IntCollection";
+                command.Parameters[namesVar].Value = CreateDataTable(collectionOfCategoryId, "id");
+
+                await this.connection.OpenAsync();
+                await using var reader = await command.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    yield return CreateProduct(reader);
+                }
             }
         }
 

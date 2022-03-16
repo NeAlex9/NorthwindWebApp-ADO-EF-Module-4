@@ -1,14 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using AutoMapper;
-using Northwind.DataAccess.Employees;
-using Northwind.DataAccess.Products;
-using Northwind.Services.Employees;
-using Northwind.Services.Products;
+﻿// <copyright file="MapperProfile.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace Northwind.Services.DataAccess
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Text;
+    using AutoMapper;
+    using Northwind.DataAccess.Employees;
+    using Northwind.DataAccess.Products;
+    using Northwind.Services.Employees;
+    using Northwind.Services.Products;
+
     /// <summary>
     /// Mapper profile.
     /// </summary>

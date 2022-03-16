@@ -1,4 +1,8 @@
-﻿namespace Northwind.DataAccess.Employees
+﻿// <copyright file="EmployeeSqlServerDataAccessObject.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
+
+namespace Northwind.DataAccess.Employees
 {
     using System;
     using System.Collections.Generic;
@@ -30,25 +34,30 @@
                 throw new ArgumentException(nameof(employeeId));
             }
 
-            await using var command = new SqlCommand("FindEmployeeById", this.connection)
+            return await Find();
+
+            async Task<EmployeeTransferObject> Find()
             {
-                CommandType = CommandType.StoredProcedure,
-            };
+                await using var command = new SqlCommand("FindEmployeeById", this.connection)
+                {
+                    CommandType = CommandType.StoredProcedure,
+                };
 
-            const string employeeVar = "employeeId";
-            command.Parameters.Add(employeeVar, SqlDbType.Int);
-            command.Parameters[employeeVar].Value = employeeId;
+                const string employeeVar = "employeeId";
+                command.Parameters.Add(employeeVar, SqlDbType.Int);
+                command.Parameters[employeeVar].Value = employeeId;
 
-            await this.connection.OpenAsync();
+                await this.connection.OpenAsync();
 
-            await using var reader = await command.ExecuteReaderAsync();
-            if (!(await reader.ReadAsync()))
-            {
-                throw new EmployeeNotFoundException(employeeId);
+                await using var reader = await command.ExecuteReaderAsync();
+                if (!(await reader.ReadAsync()))
+                {
+                    throw new EmployeeNotFoundException(employeeId);
+                }
+
+                var employeeDto = CreateEmployee(reader);
+                return employeeDto;
             }
-
-            var employeeDto = CreateEmployee(reader);
-            return employeeDto;
         }
 
         /// <inheritdoc />
@@ -64,25 +73,33 @@
                 throw new ArgumentException("Must be greater than zero.", nameof(limit));
             }
 
-            await using var command = new SqlCommand("SelectEmployees", this.connection)
+            await foreach (var e in Select())
             {
-                CommandType = CommandType.StoredProcedure,
-            };
+                yield return e;
+            }
 
-            const string offsetVar = "offset";
-            command.Parameters.Add(offsetVar, SqlDbType.Int);
-            command.Parameters[offsetVar].Value = offset;
-
-            const string limitVar = "limit";
-            command.Parameters.Add(limitVar, SqlDbType.Int);
-            command.Parameters[limitVar].Value = limit;
-
-            await this.connection.OpenAsync();
-
-            var reader = await command.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
+            async IAsyncEnumerable<EmployeeTransferObject> Select()
             {
-                yield return CreateEmployee(reader);
+                await using var command = new SqlCommand("SelectEmployees", this.connection)
+                {
+                    CommandType = CommandType.StoredProcedure,
+                };
+
+                const string offsetVar = "offset";
+                command.Parameters.Add(offsetVar, SqlDbType.Int);
+                command.Parameters[offsetVar].Value = offset;
+
+                const string limitVar = "limit";
+                command.Parameters.Add(limitVar, SqlDbType.Int);
+                command.Parameters[limitVar].Value = limit;
+
+                await this.connection.OpenAsync();
+
+                var reader = await command.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    yield return CreateEmployee(reader);
+                }
             }
         }
 
@@ -99,12 +116,17 @@
                 CommandType = CommandType.StoredProcedure,
             };
 
-            AddSqlParameters(employee, command);
+            return await Insert();
 
-            await this.connection.OpenAsync();
+            async Task<int> Insert()
+            {
+                AddSqlParameters(employee, command);
 
-            var id = (int)await command.ExecuteScalarAsync();
-            return id;
+                await this.connection.OpenAsync();
+
+                var id = (int)await command.ExecuteScalarAsync();
+                return id;
+            }
         }
 
         /// <inheritdoc />
@@ -115,19 +137,24 @@
                 throw new ArgumentException("Must be greater than zero.", nameof(employeeId));
             }
 
-            await using var command = new SqlCommand("DeleteEmployee", this.connection)
+            return await Delete();
+
+            async Task<bool> Delete()
             {
-                CommandType = CommandType.StoredProcedure,
-            };
+                await using var command = new SqlCommand("DeleteEmployee", this.connection)
+                {
+                    CommandType = CommandType.StoredProcedure,
+                };
 
-            const string varName = "employeeId";
-            command.Parameters.Add(varName, SqlDbType.Int);
-            command.Parameters[varName].Value = employeeId;
+                const string varName = "employeeId";
+                command.Parameters.Add(varName, SqlDbType.Int);
+                command.Parameters[varName].Value = employeeId;
 
-            await this.connection.OpenAsync();
+                await this.connection.OpenAsync();
 
-            var deletedRowsCount = await command.ExecuteNonQueryAsync();
-            return deletedRowsCount > 0;
+                var deletedRowsCount = await command.ExecuteNonQueryAsync();
+                return deletedRowsCount > 0;
+            }
         }
 
         /// <inheritdoc />
@@ -138,23 +165,28 @@
                 throw new ArgumentNullException(nameof(employee));
             }
 
-            await using var command = new SqlCommand("UpdateEmployee", this.connection)
+            return await Update();
+
+            async Task<bool> Update()
             {
-                CommandType = CommandType.StoredProcedure,
-            };
+                await using var command = new SqlCommand("UpdateEmployee", this.connection)
+                {
+                    CommandType = CommandType.StoredProcedure,
+                };
 
-            const string categoryIdVar = "employeeId";
-            command.Parameters.Add(categoryIdVar, SqlDbType.Int);
-            command.Parameters[categoryIdVar].Value = employee.Id;
+                const string categoryIdVar = "employeeId";
+                command.Parameters.Add(categoryIdVar, SqlDbType.Int);
+                command.Parameters[categoryIdVar].Value = employee.Id;
 
-            AddSqlParameters(employee, command);
+                AddSqlParameters(employee, command);
 
-            if (this.connection.State != ConnectionState.Open)
-            {
-                await this.connection.OpenAsync();
+                if (this.connection.State != ConnectionState.Open)
+                {
+                    await this.connection.OpenAsync();
+                }
+
+                return await command.ExecuteNonQueryAsync() > 0;
             }
-
-            return await command.ExecuteNonQueryAsync() > 0;
         }
 
         private static EmployeeTransferObject CreateEmployee(SqlDataReader reader)

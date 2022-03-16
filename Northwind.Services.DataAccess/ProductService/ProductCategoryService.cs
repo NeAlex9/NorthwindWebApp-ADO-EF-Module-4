@@ -1,14 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-using AutoMapper;
-using Northwind.DataAccess;
-using Northwind.DataAccess.Products;
-using Northwind.Services.Products;
+﻿// <copyright file="ProductCategoryService.cs" company="PlaceholderCompany">
+// Copyright (c) PlaceholderCompany. All rights reserved.
+// </copyright>
 
 namespace Northwind.Services.DataAccess.ProductService
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Text;
+    using System.Threading.Tasks;
+    using AutoMapper;
+    using Northwind.DataAccess;
+    using Northwind.DataAccess.Products;
+    using Northwind.Services.Products;
+
     /// <summary>
     /// Represent a class that manage product category.
     /// </summary>
@@ -58,7 +62,7 @@ namespace Northwind.Services.DataAccess.ProductService
 
         /// <inheritdoc />
         public async Task<int> CreateCategoryAsync(ProductCategory productCategory)
-        { 
+        {
             ArgumentNullException.ThrowIfNull(productCategory, nameof(productCategory));
             return await this.factory
                 .GetProductCategoryDataAccessObject()

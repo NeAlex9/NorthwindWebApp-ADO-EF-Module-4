@@ -6,7 +6,7 @@ using Northwind.Services.Products;
 
 namespace NorthwindApiApp.Controllers
 {
-    [Microsoft.AspNetCore.Mvc.Route("api/[controller]")]
+    [Route("api/[controller]")]
     [ApiController]
     public class ProductsController : ControllerBase
     {

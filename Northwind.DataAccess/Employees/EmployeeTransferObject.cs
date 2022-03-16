@@ -1,6 +1,7 @@
 ﻿using System;
 
-#pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
+#pragma warning disable CA1819 // Properties should not return arrays
+#pragma warning disable SA1011 // Closing square brackets should be spaced correctly
 
 namespace Northwind.DataAccess.Employees
 {
@@ -17,12 +18,12 @@ namespace Northwind.DataAccess.Employees
         /// <summary>
         /// Gets or sets first name.
         /// </summary>
-        public string FirstName { get; set; }
+        public string? FirstName { get; set; }
 
         /// <summary>
         /// Gets or sets last name.
         /// </summary>
-        public string LastName { get; set; }
+        public string? LastName { get; set; }
 
         /// <summary>
         /// Gets or sets title.
@@ -70,7 +71,7 @@ namespace Northwind.DataAccess.Employees
         public string? Country { get; set; }
 
         /// <summary>
-        /// Gets or set home phone.
+        /// Gets or sets home phone.
         /// </summary>
         public string? HomePhone { get; set; }
 
