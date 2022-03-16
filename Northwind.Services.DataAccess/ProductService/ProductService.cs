@@ -19,8 +19,9 @@ namespace Northwind.Services.DataAccess.ProductService
         private readonly IMapper productToProductDTOMapper;
 
         /// <summary>
-        /// Create a new instance of class <see cref="ProductService"/>
+        /// Initializes a new instance of the <see cref="ProductService"/> class.
         /// </summary>
+        /// <param name="mapper">mapper.</param>
         /// <param name="factory">factory to create dao.</param>
         public ProductService(NorthwindDataAccessFactory factory, IMapper mapper)
         {
@@ -44,10 +45,10 @@ namespace Northwind.Services.DataAccess.ProductService
         {
             try
             {
-                var productDTO = await this.factory
+                var productDto = await this.factory
                     .GetProductDataAccessObject()
                     .FindProduct(productId);
-                var product = this.productToProductDTOMapper.Map<Product>(productDTO);
+                var product = this.productToProductDTOMapper.Map<Product>(productDto);
                 return (true, product);
             }
             catch (ProductNotFoundException)
@@ -58,11 +59,15 @@ namespace Northwind.Services.DataAccess.ProductService
 
         /// <inheritdoc />
         public async Task<int> CreateProductAsync(Product product) =>
-            await this.factory.GetProductDataAccessObject().InsertProduct(this.productToProductDTOMapper.Map<ProductTransferObject>(product));
+            await this.factory
+                .GetProductDataAccessObject()
+                .InsertProduct(this.productToProductDTOMapper.Map<ProductTransferObject>(product));
 
         /// <inheritdoc />
         public async Task<bool> DeleteProductAsync(int productId) =>
-            await this.factory.GetProductDataAccessObject().DeleteProduct(productId);
+            await this.factory
+                .GetProductDataAccessObject()
+                .DeleteProduct(productId);
 
         /// <inheritdoc />
         public async IAsyncEnumerable<Product> GetProductsByNameAsync(ICollection<string> names)

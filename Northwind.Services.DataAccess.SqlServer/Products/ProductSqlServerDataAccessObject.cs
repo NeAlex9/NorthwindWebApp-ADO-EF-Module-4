@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.SqlClient;
-using System.Globalization;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
-#pragma warning disable CA2100 // Review SQL queries for security vulnerabilities
-
-namespace Northwind.DataAccess.Products
+﻿namespace Northwind.Services.DataAccess.SqlServer.Products
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Data;
+    using System.Data.SqlClient;
+    using System.Threading.Tasks;
+    using Northwind.DataAccess.Products;
+
     /// <summary>
     /// Represents a SQL Server-tailored DAO for Northwind products.
     /// </summary>
@@ -97,6 +93,7 @@ namespace Northwind.DataAccess.Products
         }
 
         /// <inheritdoc />
+
         public async IAsyncEnumerable<ProductTransferObject> SelectProducts(int offset, int limit)
         {
             if (offset < 0)
@@ -182,7 +179,10 @@ namespace Northwind.DataAccess.Products
 
             AddSqlParameters(product, command);
 
-            await this.connection.OpenAsync();
+            if (this.connection.State == ConnectionState.Closed)
+            {
+                await this.connection.OpenAsync();
+            }
 
             var result = await command.ExecuteNonQueryAsync();
             return result > 0;

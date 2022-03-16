@@ -21,6 +21,5 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.3.0" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.8.0" />
   </ItemGroup>
 </Project>

@@ -1,11 +1,10 @@
-﻿using System.Threading.Tasks;
-
-namespace Northwind.DataAccess.Employees
+﻿namespace Northwind.DataAccess.Employees
 {
     using System;
     using System.Collections.Generic;
     using System.Data;
     using System.Data.SqlClient;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// Represents a SQL Server-tailored DAO for Northwind products.
@@ -20,7 +19,7 @@ namespace Northwind.DataAccess.Employees
         /// <param name="connection">connection.</param>
         public EmployeeSqlServerDataAccessObject(SqlConnection connection)
         {
-            this.connection = connection;
+            this.connection = connection ?? throw new ArgumentNullException(nameof(connection));
         }
 
         /// <inheritdoc />
@@ -155,7 +154,7 @@ namespace Northwind.DataAccess.Employees
                 await this.connection.OpenAsync();
             }
 
-            return (int)await command.ExecuteScalarAsync() > 0;
+            return await command.ExecuteNonQueryAsync() > 0;
         }
 
         private static EmployeeTransferObject CreateEmployee(SqlDataReader reader)

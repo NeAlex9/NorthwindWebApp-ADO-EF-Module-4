@@ -24,8 +24,8 @@ namespace Northwind.Services.DataAccess.ProductService
         /// <param name="mapper">Dto mapper.</param>
         public ProductCategoryService(NorthwindDataAccessFactory factory, IMapper mapper)
         {
-            this.factory = factory;
-            this.mapper = mapper;
+            this.factory = factory ?? throw new ArgumentNullException(nameof(factory));
+            this.mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         /// <inheritdoc />
@@ -57,20 +57,26 @@ namespace Northwind.Services.DataAccess.ProductService
         }
 
         /// <inheritdoc />
-        public async Task<int> CreateCategoryAsync(ProductCategory productCategory) =>
-            await this.factory
+        public async Task<int> CreateCategoryAsync(ProductCategory productCategory)
+        { 
+            ArgumentNullException.ThrowIfNull(productCategory, nameof(productCategory));
+            return await this.factory
                 .GetProductCategoryDataAccessObject()
                 .InsertProductCategory(this.mapper.Map<ProductCategoryTransferObject>(productCategory));
+        }
 
         /// <inheritdoc />
-        public async Task<bool> DeleteCategoryAsync(int categoryId) =>
-            await this.factory
+        public async Task<bool> DeleteCategoryAsync(int categoryId)
+        {
+            return await this.factory
                 .GetProductCategoryDataAccessObject()
                 .DeleteProductCategory(categoryId);
+        }
 
         /// <inheritdoc />
         public async IAsyncEnumerable<ProductCategory> GetCategoriesByNameAsync(ICollection<string> names)
         {
+            ArgumentNullException.ThrowIfNull(names, nameof(names));
             await foreach (var dto in this.factory
                                .GetProductCategoryDataAccessObject()
                                .SelectProductCategoriesByName(names))
@@ -82,6 +88,7 @@ namespace Northwind.Services.DataAccess.ProductService
         /// <inheritdoc />
         public async Task<bool> UpdateCategoriesAsync(int categoryId, ProductCategory productCategory)
         {
+            ArgumentNullException.ThrowIfNull(productCategory, nameof(productCategory));
             productCategory.Id = categoryId;
             return await this.factory
                 .GetProductCategoryDataAccessObject()

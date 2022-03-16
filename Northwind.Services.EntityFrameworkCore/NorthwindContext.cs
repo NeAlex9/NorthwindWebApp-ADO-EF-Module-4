@@ -6,17 +6,35 @@ using Northwind.Services.Products;
 
 namespace Northwind.Services.EntityFrameworkCore
 {
+    /// <summary>
+    /// Context required by entity framework.
+    /// </summary>
     public class NorthwindContext : DbContext
     {
         private readonly string connectionString;
 
+        /// <summary>
+        /// Initialize the new instance of class <see cref="NorthwindContext"/>
+        /// </summary>
+        /// <param name="connectionString"></param>
         public NorthwindContext(string connectionString)
         {
             this.connectionString = connectionString;
         }
 
+        /// <summary>
+        /// Employees data context.
+        /// </summary>
         public virtual DbSet<EmployeeTransferObject> Employees { get; set; }
+        
+        /// <summary>
+        /// Products data context.
+        /// </summary>
         public virtual DbSet<ProductTransferObject> Products { get; set; }
+
+        /// <summary>
+        /// Categories data context.
+        /// </summary>
         public virtual DbSet<ProductCategoryTransferObject> Categories { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

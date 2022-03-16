@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Threading.Tasks;
-using AutoMapper;
-using Northwind.DataAccess;
-using Northwind.DataAccess.Products;
-using Northwind.Services.Products;
-
-namespace Northwind.Services.DataAccess.ProductService
+﻿namespace Northwind.Services.DataAccess.ProductService
 {
+    using System;
+    using System.IO;
+    using System.Threading.Tasks;
+    using Northwind.DataAccess;
+    using Northwind.DataAccess.Products;
+    using Northwind.Services.Products;
+
     /// <summary>
     /// Category picture service.
     /// </summary>
@@ -25,7 +22,7 @@ namespace Northwind.Services.DataAccess.ProductService
         /// <param name="categoryToCategoryDto">category DTO mapper.</param>
         public ProductCategoryPictureService(NorthwindDataAccessFactory factory)
         {
-            this.factory = factory;
+            this.factory = factory ?? throw new ArgumentNullException(nameof(factory));
         }
 
         /// <inheritdoc />
@@ -36,12 +33,17 @@ namespace Northwind.Services.DataAccess.ProductService
                 var dto = await this.factory
                     .GetProductCategoryDataAccessObject()
                     .FindProductCategory(categoryId);
+                if (dto.Picture is null)
+                {
+                    return (false, new byte[] { });
+                }
+
                 var imageBytes = dto.Picture[ReservedBytes..];
                 return (true, imageBytes);
             }
             catch (ProductCategoryNotFoundException)
             {
-                return (false, null);
+                return (false, new byte[] { });
             }
         }
 
@@ -57,26 +59,18 @@ namespace Northwind.Services.DataAccess.ProductService
 
                 var dao = this.factory.GetProductCategoryDataAccessObject();
                 var dto = await dao.FindProductCategory(categoryId);
-                dto.Picture = null;
+                if (dto.Picture is null)
+                {
+                    return false;
+                }
+
                 await using var memoryStream = new MemoryStream();
                 await stream.CopyToAsync(memoryStream);
                 var bytes = memoryStream.ToArray();
-                if (dto.Picture is null)
-                {
-                    dto.Picture = bytes;
-                }
-                else
-                {
-                    bytes.CopyTo(dto.Picture, ReservedBytes);
-                }
-
+                bytes.CopyTo(dto.Picture, ReservedBytes);
                 return await dao.UpdateProductCategory(dto);
             }
             catch (ProductCategoryNotFoundException)
-            {
-                return false;
-            }
-            catch (NullReferenceException)
             {
                 return false;
             }
@@ -93,10 +87,6 @@ namespace Northwind.Services.DataAccess.ProductService
                 return await dao.UpdateProductCategory(dto);
             }
             catch (ProductCategoryNotFoundException)
-            {
-                return false;
-            }
-            catch (NullReferenceException)
             {
                 return false;
             }

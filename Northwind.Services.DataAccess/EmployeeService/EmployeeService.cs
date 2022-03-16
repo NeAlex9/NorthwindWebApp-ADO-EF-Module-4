@@ -1,14 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-using AutoMapper;
-using Northwind.DataAccess;
-using Northwind.DataAccess.Employees;
-using Northwind.Services.Employees;
 
 namespace Northwind.Services.DataAccess.EmployeeService
 {
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+    using AutoMapper;
+    using Northwind.DataAccess;
+    using Northwind.DataAccess.Employees;
+    using Northwind.Services.Employees;
+
     /// <summary>
     /// Employee service class.
     /// </summary>
@@ -24,8 +24,8 @@ namespace Northwind.Services.DataAccess.EmployeeService
         /// <param name="employeeToEmployeeDto">employee dto.</param>
         public EmployeeService(NorthwindDataAccessFactory factory, IMapper employeeToEmployeeDto)
         {
-            this.factory = factory;
-            this.mapper = employeeToEmployeeDto;
+            this.factory = factory ?? throw new ArgumentNullException(nameof(factory));
+            this.mapper = employeeToEmployeeDto ?? throw new ArgumentNullException(nameof(this.mapper));
         }
 
         /// <inheritdoc />

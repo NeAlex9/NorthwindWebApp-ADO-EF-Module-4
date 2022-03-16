@@ -18,6 +18,8 @@ namespace NorthwindApiApp.Controllers
         }
 
         [HttpGet("{id}")]
+        [ApiConventionMethod(typeof(DefaultApiConventions),
+            nameof(DefaultApiConventions.Get))]
         public async Task<ActionResult<Product>> GetProductById(int id)
         {
             (bool isSuccess, Product product) = await this.productService.TryGetProductAsync(id);
@@ -30,6 +32,8 @@ namespace NorthwindApiApp.Controllers
         }
 
         [HttpGet()]
+        [ApiConventionMethod(typeof(DefaultApiConventions),
+            nameof(DefaultApiConventions.Get))]
         public async IAsyncEnumerable<Product> GetProduct(int offset, int limit)
         {
             await foreach (var product in this.productService
@@ -40,6 +44,8 @@ namespace NorthwindApiApp.Controllers
         }
 
         [HttpPost]
+        [ApiConventionMethod(typeof(DefaultApiConventions),
+            nameof(DefaultApiConventions.Post))]
         public async Task<ActionResult<Product>> CreateProduct(Product product)
         {
             var productId = await this.productService.CreateProductAsync(product);
@@ -51,6 +57,8 @@ namespace NorthwindApiApp.Controllers
         }
 
         [HttpDelete("{id}")]
+        [ApiConventionMethod(typeof(DefaultApiConventions),
+            nameof(DefaultApiConventions.Delete))]
         public async Task<IActionResult> DeleteProduct(int id)
         {
             var result = await this.productService.DeleteProductAsync(id);
@@ -63,6 +71,8 @@ namespace NorthwindApiApp.Controllers
         }
 
         [HttpGet("ByNames")]
+        [ApiConventionMethod(typeof(DefaultApiConventions),
+            nameof(DefaultApiConventions.Get))]
         public async IAsyncEnumerable<Product> GetProductsByName([FromQuery] ICollection<string> names)
         {
             await foreach (var product in this.productService
@@ -73,6 +83,8 @@ namespace NorthwindApiApp.Controllers
         }
 
         [HttpGet("ByCategory")]
+        [ApiConventionMethod(typeof(DefaultApiConventions),
+            nameof(DefaultApiConventions.Get))]
         public async IAsyncEnumerable<Product> GetProductsByCategory([FromQuery] ICollection<int> categories)
         {
             await foreach (var product in this.productService
@@ -83,6 +95,8 @@ namespace NorthwindApiApp.Controllers
         }
 
         [HttpPut]
+        [ApiConventionMethod(typeof(DefaultApiConventions),
+            nameof(DefaultApiConventions.Put))]
         public async Task<IActionResult> UpdateProduct(int productId, Product product)
         {
             product.Id = productId;

@@ -86,7 +86,11 @@ namespace Northwind.DataAccess.Products
             command.Parameters.Add(varName, SqlDbType.Int);
             command.Parameters[varName].Value = productCategoryId;
 
-            this.connection.Open();
+            if (this.connection.State == ConnectionState.Closed)
+            {
+                await this.connection.OpenAsync();
+            }
+
             await using var reader = await command.ExecuteReaderAsync();
             if (!(await reader.ReadAsync()))
             {
@@ -94,7 +98,6 @@ namespace Northwind.DataAccess.Products
             }
 
             var category = CreateProductCategory(reader);
-            //await this.connection.CloseAsync();
             return category;
         }
 
@@ -189,7 +192,8 @@ namespace Northwind.DataAccess.Products
                 await this.connection.OpenAsync();
             }
 
-            return (int)await command.ExecuteScalarAsync() > 0;
+            var result = await command.ExecuteNonQueryAsync();
+            return result > 0;
         }
 
         private static ProductCategoryTransferObject CreateProductCategory(SqlDataReader reader)

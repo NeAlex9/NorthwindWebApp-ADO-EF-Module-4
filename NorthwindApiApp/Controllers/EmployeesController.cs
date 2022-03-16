@@ -23,6 +23,8 @@ namespace NorthwindApiApp.Controllers
         }
 
         [HttpGet("{id}")]
+        [ApiConventionMethod(typeof(DefaultApiConventions),
+            nameof(DefaultApiConventions.Get))]
         public async Task<ActionResult<ProductCategory>> GetCategoryById(int id)
         {
             (bool isSuccess, Employee employee) = await this.employeeService.TryGetEmployeeIdAsync(id);
@@ -35,6 +37,8 @@ namespace NorthwindApiApp.Controllers
         }
 
         [HttpGet]
+        [ApiConventionMethod(typeof(DefaultApiConventions),
+            nameof(DefaultApiConventions.Get))]
         public async IAsyncEnumerable<Employee> GetEmployee(int offset, int limit)
         {
             await foreach (var employee in this.employeeService
@@ -45,6 +49,8 @@ namespace NorthwindApiApp.Controllers
         }
 
         [HttpPost]
+        [ApiConventionMethod(typeof(DefaultApiConventions),
+            nameof(DefaultApiConventions.Post))]
         public async Task<ActionResult<Employee>> CreateEmployee(Employee employee)
         {
             var categoryId = await this.employeeService
@@ -57,6 +63,8 @@ namespace NorthwindApiApp.Controllers
         }
 
         [HttpDelete("{id}")]
+        [ApiConventionMethod(typeof(DefaultApiConventions),
+            nameof(DefaultApiConventions.Delete))]
         public async Task<ActionResult> DeleteEmployee(int id)
         {
             var result = await this.employeeService
@@ -70,6 +78,8 @@ namespace NorthwindApiApp.Controllers
         }
 
         [HttpPut]
+        [ApiConventionMethod(typeof(DefaultApiConventions),
+            nameof(DefaultApiConventions.Put))]
         public async Task<IActionResult> UpdateEmployee(int id, Employee employee)
         {
             if (id != employee.Id)
@@ -88,6 +98,8 @@ namespace NorthwindApiApp.Controllers
         }
 
         [HttpPut("{employeeId}/picture")]
+        [ApiConventionMethod(typeof(DefaultApiConventions),
+            nameof(DefaultApiConventions.Put))]
         public async Task<IActionResult> UpdateCategoryPicture(int employeeId, IFormFile formFile)
         {
             var result = await this.pictureService
@@ -101,6 +113,8 @@ namespace NorthwindApiApp.Controllers
         }
 
         [HttpGet("{employeeId}/picture")]
+        [ApiConventionMethod(typeof(DefaultApiConventions),
+            nameof(DefaultApiConventions.Get))]
         public async Task<IActionResult> GetCategoryPicture(int employeeId)
         {
             var (result, imageBytes) = await this.pictureService
@@ -114,6 +128,8 @@ namespace NorthwindApiApp.Controllers
         }
 
         [HttpDelete("{employeeId}/picture")]
+        [ApiConventionMethod(typeof(DefaultApiConventions),
+            nameof(DefaultApiConventions.Delete))]
         public async Task<IActionResult> DeleteCategoryPicture(int employeeId)
         {
             var result = await this.pictureService.DeletePictureAsync(employeeId);

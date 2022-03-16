@@ -37,11 +37,11 @@
                     .GetEmployeeDataAccessObject()
                     .FindEmployeeAsync(categoryId);
                 var imageBytes = dto.Photo?[ReservedBytes..];
-                return imageBytes is null ? (false, null) : (true, imageBytes);
+                return imageBytes is null ? (false, new byte[] { }) : (true, imageBytes);
             }
             catch (ProductCategoryNotFoundException)
             {
-                return (false, null);
+                return (false, new byte[] { });
             }
         }
 
@@ -57,26 +57,19 @@
 
                 var dao = this.factory.GetEmployeeDataAccessObject();
                 var dto = await dao.FindEmployeeAsync(employeeId);
-                dto.Photo = null;
+                if (dto.Photo is null)
+                {
+                    return false;
+                }
+
                 await using var memoryStream = new MemoryStream();
                 await stream.CopyToAsync(memoryStream);
                 var bytes = memoryStream.ToArray();
-                if (dto.Photo is null)
-                {
-                    dto.Photo = bytes;
-                }
-                else
-                {
-                    bytes.CopyTo(dto.Photo, ReservedBytes);
-                }
+                bytes.CopyTo(dto.Photo, ReservedBytes);
 
                 return await dao.UpdateEmployeeAsync(dto);
             }
             catch (ProductCategoryNotFoundException)
-            {
-                return false;
-            }
-            catch (NullReferenceException)
             {
                 return false;
             }
@@ -93,10 +86,6 @@
                 return await dao.UpdateEmployeeAsync(dto);
             }
             catch (ProductCategoryNotFoundException)
-            {
-                return false;
-            }
-            catch (NullReferenceException)
             {
                 return false;
             }

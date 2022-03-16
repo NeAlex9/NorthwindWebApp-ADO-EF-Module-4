@@ -23,6 +23,5 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Northwind.DataAccess\Northwind.DataAccess.csproj" />
-    <ProjectReference Include="..\Northwind.Services.DataAccess.SqlServer\Northwind.Services.DataAccess.SqlServer.csproj" />
   </ItemGroup>
 </Project>
