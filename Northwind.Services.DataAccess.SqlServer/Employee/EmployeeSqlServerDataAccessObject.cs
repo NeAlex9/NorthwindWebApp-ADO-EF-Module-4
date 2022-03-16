@@ -27,14 +27,14 @@ namespace Northwind.DataAccess.Employees
         }
 
         /// <inheritdoc />
-        public async Task<EmployeeTransferObject> FindEmployeeAsync(int employeeId)
+        public Task<EmployeeTransferObject> FindEmployeeAsync(int employeeId)
         {
             if (employeeId <= 0)
             {
                 throw new ArgumentException(nameof(employeeId));
             }
 
-            return await Find();
+            return Find();
 
             async Task<EmployeeTransferObject> Find()
             {
@@ -61,7 +61,7 @@ namespace Northwind.DataAccess.Employees
         }
 
         /// <inheritdoc />
-        public async IAsyncEnumerable<EmployeeTransferObject> SelectEmployeesAsync(int offset, int limit)
+        public IAsyncEnumerable<EmployeeTransferObject> SelectEmployeesAsync(int offset, int limit)
         {
             if (offset < 0)
             {
@@ -73,10 +73,7 @@ namespace Northwind.DataAccess.Employees
                 throw new ArgumentException("Must be greater than zero.", nameof(limit));
             }
 
-            await foreach (var e in Select())
-            {
-                yield return e;
-            }
+            return Select();
 
             async IAsyncEnumerable<EmployeeTransferObject> Select()
             {
@@ -104,22 +101,22 @@ namespace Northwind.DataAccess.Employees
         }
 
         /// <inheritdoc />
-        public async Task<int> InsertEmployeeAsync(EmployeeTransferObject employee)
+        public Task<int> InsertEmployeeAsync(EmployeeTransferObject employee)
         {
             if (employee == null)
             {
                 throw new ArgumentNullException(nameof(employee));
             }
 
-            await using var command = new SqlCommand("InsertEmployee", this.connection)
-            {
-                CommandType = CommandType.StoredProcedure,
-            };
-
-            return await Insert();
+            return Insert();
 
             async Task<int> Insert()
             {
+                await using var command = new SqlCommand("InsertEmployee", this.connection)
+                {
+                    CommandType = CommandType.StoredProcedure,
+                };
+
                 AddSqlParameters(employee, command);
 
                 await this.connection.OpenAsync();
@@ -130,14 +127,14 @@ namespace Northwind.DataAccess.Employees
         }
 
         /// <inheritdoc />
-        public async Task<bool> DeleteEmployeeAsync(int employeeId)
+        public Task<bool> DeleteEmployeeAsync(int employeeId)
         {
             if (employeeId <= 0)
             {
                 throw new ArgumentException("Must be greater than zero.", nameof(employeeId));
             }
 
-            return await Delete();
+            return Delete();
 
             async Task<bool> Delete()
             {
@@ -158,14 +155,14 @@ namespace Northwind.DataAccess.Employees
         }
 
         /// <inheritdoc />
-        public async Task<bool> UpdateEmployeeAsync(EmployeeTransferObject employee)
+        public Task<bool> UpdateEmployeeAsync(EmployeeTransferObject employee)
         {
             if (employee == null)
             {
                 throw new ArgumentNullException(nameof(employee));
             }
 
-            return await Update();
+            return Update();
 
             async Task<bool> Update()
             {

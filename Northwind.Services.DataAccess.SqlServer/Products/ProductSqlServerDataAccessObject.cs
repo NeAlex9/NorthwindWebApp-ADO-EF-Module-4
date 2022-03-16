@@ -28,14 +28,14 @@ namespace Northwind.Services.DataAccess.SqlServer.Products
         }
 
         /// <inheritdoc/>
-        public async Task<int> InsertProduct(ProductTransferObject product)
+        public Task<int> InsertProduct(ProductTransferObject product)
         {
             if (product == null)
             {
                 throw new ArgumentNullException(nameof(product));
             }
 
-            return await Insert();
+            return Insert();
 
             async Task<int> Insert()
             {
@@ -52,14 +52,14 @@ namespace Northwind.Services.DataAccess.SqlServer.Products
         }
 
         /// <inheritdoc/>
-        public async Task<bool> DeleteProduct(int productId)
+        public Task<bool> DeleteProduct(int productId)
         {
             if (productId <= 0)
             {
                 throw new ArgumentException("Must be greater than zero.", nameof(productId));
             }
 
-            return await Delete();
+            return Delete();
 
             async Task<bool> Delete()
             {
@@ -79,14 +79,14 @@ namespace Northwind.Services.DataAccess.SqlServer.Products
         }
 
         /// <inheritdoc/>
-        public async Task<ProductTransferObject> FindProduct(int productId)
+        public Task<ProductTransferObject> FindProduct(int productId)
         {
             if (productId <= 0)
             {
                 throw new ArgumentException("Must be greater than zero.", nameof(productId));
             }
 
-            return await Find();
+            return Find();
 
             async Task<ProductTransferObject> Find()
             {
@@ -112,7 +112,7 @@ namespace Northwind.Services.DataAccess.SqlServer.Products
         }
 
         /// <inheritdoc />
-        public async IAsyncEnumerable<ProductTransferObject> SelectProducts(int offset, int limit)
+        public IAsyncEnumerable<ProductTransferObject> SelectProducts(int offset, int limit)
         {
             if (offset < 0)
             {
@@ -124,10 +124,7 @@ namespace Northwind.Services.DataAccess.SqlServer.Products
                 throw new ArgumentException("Must be greater than zero.", nameof(limit));
             }
 
-            await foreach (var p in Select())
-            {
-                yield return p;
-            }
+            return Select();
 
             async IAsyncEnumerable<ProductTransferObject> Select()
             {
@@ -155,7 +152,7 @@ namespace Northwind.Services.DataAccess.SqlServer.Products
         }
 
         /// <inheritdoc/>
-        public async IAsyncEnumerable<ProductTransferObject> SelectProductsByName(ICollection<string> productNames)
+        public IAsyncEnumerable<ProductTransferObject> SelectProductsByName(ICollection<string> productNames)
         {
             if (productNames == null)
             {
@@ -167,10 +164,7 @@ namespace Northwind.Services.DataAccess.SqlServer.Products
                 throw new ArgumentException("Collection is empty.", nameof(productNames));
             }
 
-            await foreach (var p in Select())
-            {
-                yield return p;
-            }
+            return Select();
 
             async IAsyncEnumerable<ProductTransferObject> Select()
             {
@@ -195,14 +189,14 @@ namespace Northwind.Services.DataAccess.SqlServer.Products
         }
 
         /// <inheritdoc/>
-        public async Task<bool> UpdateProduct(ProductTransferObject product)
+        public Task<bool> UpdateProduct(ProductTransferObject product)
         {
             if (product == null)
             {
                 throw new ArgumentNullException(nameof(product));
             }
 
-            return await Update();
+            return Update();
 
             async Task<bool> Update()
             {
@@ -228,17 +222,14 @@ namespace Northwind.Services.DataAccess.SqlServer.Products
         }
 
         /// <inheritdoc/>
-        public async IAsyncEnumerable<ProductTransferObject> SelectProductByCategory(ICollection<int> collectionOfCategoryId)
+        public IAsyncEnumerable<ProductTransferObject> SelectProductByCategory(ICollection<int> collectionOfCategoryId)
         {
             if (collectionOfCategoryId == null)
             {
                 throw new ArgumentNullException(nameof(collectionOfCategoryId));
             }
 
-            await foreach (var p in Select())
-            {
-                yield return p;
-            }
+            return Select();
 
             async IAsyncEnumerable<ProductTransferObject> Select()
             {

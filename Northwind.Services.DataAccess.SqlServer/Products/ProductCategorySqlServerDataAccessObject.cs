@@ -27,14 +27,14 @@ namespace Northwind.DataAccess.Products
         }
 
         /// <inheritdoc/>
-        public async Task<int> InsertProductCategory(ProductCategoryTransferObject productCategory)
+        public Task<int> InsertProductCategory(ProductCategoryTransferObject productCategory)
         {
             if (productCategory == null)
             {
                 throw new ArgumentNullException(nameof(productCategory));
             }
 
-            return await Insert();
+            return Insert();
 
             async Task<int> Insert()
             {
@@ -53,14 +53,14 @@ namespace Northwind.DataAccess.Products
         }
 
         /// <inheritdoc/>
-        public async Task<bool> DeleteProductCategory(int productCategoryId)
+        public Task<bool> DeleteProductCategory(int productCategoryId)
         {
             if (productCategoryId <= 0)
             {
                 throw new ArgumentException("Must be greater than zero.", nameof(productCategoryId));
             }
 
-            return await Delete();
+            return Delete();
 
             async Task<bool> Delete()
             {
@@ -81,14 +81,14 @@ namespace Northwind.DataAccess.Products
         }
 
         /// <inheritdoc/>
-        public async Task<ProductCategoryTransferObject> FindProductCategory(int productCategoryId)
+        public Task<ProductCategoryTransferObject> FindProductCategory(int productCategoryId)
         {
             if (productCategoryId <= 0)
             {
                 throw new ArgumentException("Must be greater than zero.", nameof(productCategoryId));
             }
 
-            return await Find();
+            return Find();
 
             async Task<ProductCategoryTransferObject> Find()
             {
@@ -118,7 +118,7 @@ namespace Northwind.DataAccess.Products
         }
 
         /// <inheritdoc/>
-        public async IAsyncEnumerable<ProductCategoryTransferObject> SelectProductCategories(int offset, int limit)
+        public IAsyncEnumerable<ProductCategoryTransferObject> SelectProductCategories(int offset, int limit)
         {
             if (offset < 0)
             {
@@ -130,18 +130,15 @@ namespace Northwind.DataAccess.Products
                 throw new ArgumentException("Must be greater than zero.", nameof(limit));
             }
 
-            await using var command = new SqlCommand("SelectCategories", this.connection)
-            {
-                CommandType = CommandType.StoredProcedure,
-            };
-
-            await foreach (var p in Select())
-            {
-                yield return p;
-            }
+            return Select();
 
             async IAsyncEnumerable<ProductCategoryTransferObject> Select()
             {
+                await using var command = new SqlCommand("SelectCategories", this.connection)
+                {
+                    CommandType = CommandType.StoredProcedure,
+                };
+
                 const string offsetVar = "offset";
                 command.Parameters.Add(offsetVar, SqlDbType.Int);
                 command.Parameters[offsetVar].Value = offset;
@@ -161,7 +158,7 @@ namespace Northwind.DataAccess.Products
         }
 
         /// <inheritdoc/>
-        public async IAsyncEnumerable<ProductCategoryTransferObject> SelectProductCategoriesByName(ICollection<string> productCategoryNames)
+        public IAsyncEnumerable<ProductCategoryTransferObject> SelectProductCategoriesByName(ICollection<string> productCategoryNames)
         {
             if (productCategoryNames == null)
             {
@@ -173,10 +170,7 @@ namespace Northwind.DataAccess.Products
                 throw new ArgumentException("Collection is empty.", nameof(productCategoryNames));
             }
 
-            await foreach (var p in Select())
-            {
-                yield return p;
-            }
+            return Select();
 
             async IAsyncEnumerable<ProductCategoryTransferObject> Select()
             {
@@ -201,14 +195,14 @@ namespace Northwind.DataAccess.Products
         }
 
         /// <inheritdoc/>
-        public async Task<bool> UpdateProductCategory(ProductCategoryTransferObject productCategory)
+        public Task<bool> UpdateProductCategory(ProductCategoryTransferObject productCategory)
         {
             if (productCategory == null)
             {
                 throw new ArgumentNullException(nameof(productCategory));
             }
 
-            return await Update();
+            return Update();
 
             async Task<bool> Update()
             {
