@@ -28,6 +28,16 @@ namespace Northwind.Services.EntityFrameworkCore.Employees
         /// <inheritdoc />
         public async IAsyncEnumerable<Employee> GetEmployeesAsync(int offset, int limit)
         {
+            if (offset < 0)
+            {
+                throw new ArgumentException("Must be greater than zero or equals zero.", nameof(offset));
+            }
+
+            if (limit < 1)
+            {
+                throw new ArgumentException("Must be greater than zero.", nameof(limit));
+            }
+
             await foreach (var dto in this.context
                                .Employees
                                .AsNoTracking()

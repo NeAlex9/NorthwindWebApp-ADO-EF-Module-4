@@ -23,6 +23,16 @@ namespace Northwind.Services.EntityFrameworkCore.Products
         /// <inheritdoc />
         public async IAsyncEnumerable<ProductCategory> GetCategoriesAsync(int offset, int limit)
         {
+            if (offset < 0)
+            {
+                throw new ArgumentException("Must be greater than zero or equals zero.", nameof(offset));
+            }
+
+            if (limit < 1)
+            {
+                throw new ArgumentException("Must be greater than zero.", nameof(limit));
+            }
+
             await foreach (var categoryDto in this.context
                                .Categories
                                .AsNoTracking()
